@@ -1,4 +1,5 @@
 import { h, render, createContext } from "https://cdn.skypack.dev/preact";
+import { createPortal } from "https://cdn.skypack.dev/preact/compat";
 import {
   useState,
   useEffect,
@@ -9,12 +10,10 @@ import htm from "https://cdn.skypack.dev/htm";
 const html = htm.bind(h);
 
 /** LEGACY things */
-let DEFAULTSETTINGS = {
-  pretokenise: true,
-  favourites: ["boot", "launch", "setting"],
-};
 //This is required by Comm.uploadApp
-window.SETTINGS = JSON.parse(JSON.stringify(DEFAULTSETTINGS));
+window.SETTINGS = {
+  pretokenise: true,
+};
 
 /** UTILS */
 function createSharedHook(hook, defaultValue) {
@@ -60,6 +59,103 @@ function runEmulator(app) {
   baseurl = baseurl.substr(0, baseurl.lastIndexOf("/"));
   let url = baseurl + "/apps/" + app.id + "/" + file.url;
   window.open(`https://espruino.com/ide/emulator.html?codeurl=${url}&upload`);
+}
+
+function Dialog({ header, body, footer, onClose }) {
+  const container = document.getElementById("modals");
+
+  function handleClose(evt) {
+    evt.preventDefault();
+    onClose();
+  }
+
+  const upHandler = ({ code, which }) => {
+    if (code === 'Escape' || which === 27) {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    addEventListener("keyup", upHandler);
+
+    return () => {
+      removeEventListener("keyup", upHandler);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    html`
+      <div role="dialog" class="modal active">
+        <a
+          href="#close"
+          class="modal-overlay"
+          aria-label="Close"
+          onClick=${handleClose}
+        ></a>
+        <div class="modal-container">
+          <div class="modal-header">
+            <a
+              href="#close"
+              class="btn btn-clear float-right"
+              aria-label="Close"
+              onClick=${handleClose}
+            ></a>
+            ${header}
+          </div>
+          <div class="modal-body">
+            ${body}
+          </div>
+          ${footer &&
+          html`
+            <div class="modal-footer">
+              ${footer}
+            </div>
+          `}
+        </div>
+      </div>
+    `,
+    container
+  );
+}
+
+function Prompt({ header, body, onConfirm, onClose }) {
+  return html`
+    <${Dialog}
+      header=${header}
+      body=${body}
+      onClose=${onClose}
+      footer=${html`
+        <button class="btn btn-primary" onClick=${onConfirm}>Yes</button>
+        <button class="btn" onClick=${onClose}>No</button>
+      `}
+    />
+  `;
+}
+
+function usePrompt(onConfirm) {
+  const [open, setOpen] = useState(false);
+  const [args, setArgs] = useState();
+
+  function showPrompt(...args) {
+    setOpen(true);
+    setArgs(args);
+  }
+
+  function handleConfirm() {
+    onConfirm(...args);
+    setOpen(false);
+  }
+
+  function handleClose() {
+    setOpen(false);
+  }
+
+  return {
+    showPrompt,
+    onConfirm: handleConfirm,
+    onClose: handleClose,
+    open,
+  };
 }
 
 const [AppsProvider, useApps] = createSharedHook(function () {
@@ -140,6 +236,7 @@ const [AppsProvider, useApps] = createSharedHook(function () {
     return promise;
   }
 
+  //TODO Move the connection check outside
   function upload(app) {
     return getInstalledApps()
       .then((appsInstalled) => {
@@ -252,10 +349,7 @@ const [AppsProvider, useApps] = createSharedHook(function () {
   }
 
   function removeAll() {
-    showPrompt("Remove All", "Really remove all apps?")
-      .then(() => {
-        return Comms.removeAllApps();
-      })
+    Comms.removeAllApps()
       .then(() => {
         Progress.hide({ sticky: true });
         showToast("All apps removed", "success");
@@ -278,18 +372,12 @@ const [AppsProvider, useApps] = createSharedHook(function () {
     );
   }
 
-  function installMultipleApps(appIds, promptName) {
+  function installMultipleApps(appIds) {
     let apps = appIds.map((appid) => list.find((app) => app.id == appid));
     if (apps.some((x) => x === undefined))
       return Promise.reject("Not all apps found");
     let appCount = apps.length;
-    return showPrompt(
-      "Install Defaults",
-      `Remove everything and install ${promptName} apps?`
-    )
-      .then(() => {
-        return Comms.removeAllApps();
-      })
+    return Comms.removeAllApps()
       .then(() => {
         Progress.hide({ sticky: true });
         showToast(`Existing apps removed. Installing  ${appCount} apps...`);
@@ -667,6 +755,8 @@ function InstalledApps() {
 
 function About() {
   const apps = useApps();
+  const removeAllPrompt = usePrompt(apps.removeAll);
+  const installDefaultPrompt = usePrompt(apps.installDefaultApps);
 
   return html`<div class="hero bg-gray">
       <div class="hero-body">
@@ -701,8 +791,12 @@ function About() {
       <h3>Utilities</h3>
       <p>
         <button class="btn" onClick=${apps.setTime}>Set Bangle.js Time</button>
-        <button class="btn" onClick=${apps.removeAll}>Remove all Apps</button>
-        <button class="btn" onClick=${apps.installDefaultApps}>Install default apps</button>
+        <button class="btn" onClick=${removeAllPrompt.showPrompt}>
+          Remove all Apps
+        </button>
+        <button class="btn" onClick=${installDefaultPrompt.showPrompt}>
+          Install default apps
+        </button>
       </p>
       <h3>Settings</h3>
       <div class="form-group">
@@ -712,6 +806,24 @@ function About() {
           faster apps)
         </label>
       </div>
+      ${removeAllPrompt.open &&
+      html`
+        <${Prompt}
+          header="Remove all"
+          body="Really remove all apps?"
+          onConfirm=${removeAllPrompt.onConfirm}
+          onClose=${removeAllPrompt.onClose}
+        />
+      `}
+      ${installDefaultPrompt.open &&
+      html`
+        <${Prompt}
+          header="Install Defaults"
+          body="Remove everything and install default apps?"
+          onConfirm=${installDefaultPrompt.onConfirm}
+          onClose=${installDefaultPrompt.onClose}
+        />
+      `}
     </div>`;
 }
 
@@ -738,7 +850,12 @@ function HttpsBanner() {
   return html`<div class="container" style="padding-top:4px">
     <p>
       <b>STOP!</b> This page <b>must</b> be served over HTTPS. Please
-      <a>reload this page via HTTPS</a>.
+      <a
+        onClick=${() => {
+          location.href = location.href.replace(`http://`, "https://");
+        }}
+        >reload this page via HTTPS</a
+      >.
     </p>
   </div>`;
 }
