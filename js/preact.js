@@ -76,13 +76,13 @@ function Dialog({ header, body, footer, onClose }) {
     onClose();
   }
 
-  const upHandler = ({ code, which }) => {
-    if (code === "Escape" || which === 27) {
-      onClose();
-    }
-  };
-
   useEffect(() => {
+    const upHandler = ({ code, which }) => {
+      if (code === "Escape" || which === 27) {
+        onClose();
+      }
+    };
+
     addEventListener("keyup", upHandler);
 
     return () => {
@@ -106,6 +106,44 @@ function Dialog({ header, body, footer, onClose }) {
 
     return () => {
       focusedElBeforeOpen && focusedElBeforeOpen.focus();
+    };
+  }, []);
+
+  useEffect(() => {
+    const focusTrap = (evt) => {
+      const { code, which, shiftKey } = evt;
+
+      if (code !== "Tab" && which !== 9) return;
+
+      const focusableElements = getFocusableElements(
+        ref.current.querySelector(".modal-container")
+      );
+
+      if (focusableElements.length === 1) {
+        evt.preventDefault();
+        return;
+      }
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+
+      if (shiftKey) {
+        if (document.activeElement === first) {
+          evt.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          evt.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    addEventListener("keydown", focusTrap);
+
+    return () => {
+      removeEventListener("keydown", focusTrap);
     };
   }, []);
 
