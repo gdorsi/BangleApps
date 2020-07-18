@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   useContext,
+  useRef,
 } from "https://cdn.skypack.dev/preact/hooks";
 import htm from "https://cdn.skypack.dev/htm";
 
@@ -48,6 +49,12 @@ function getAppGithubURL(app) {
   return `https://github.com/${username}/BangleApps/tree/master/apps/${app.id}`;
 }
 
+function getFocusableElements(el) {
+  return el.querySelectorAll(
+    'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex="0"]'
+  );
+}
+
 /** EFFECTS */
 function runEmulator(app) {
   let file = app.storage.find((f) => f.name.endsWith(".js"));
@@ -70,7 +77,7 @@ function Dialog({ header, body, footer, onClose }) {
   }
 
   const upHandler = ({ code, which }) => {
-    if (code === 'Escape' || which === 27) {
+    if (code === "Escape" || which === 27) {
       onClose();
     }
   };
@@ -83,9 +90,28 @@ function Dialog({ header, body, footer, onClose }) {
     };
   }, [onClose]);
 
+  const ref = useRef();
+
+  useEffect(() => {
+    const focusedElBeforeOpen = document.activeElement;
+
+    const focusableElements = getFocusableElements(
+      ref.current.querySelector(".modal-container")
+    );
+
+    //The close button is focused only when it is the only focusable element
+    const focusedEl = focusableElements[1] || focusableElements[0];
+
+    focusedEl.focus();
+
+    return () => {
+      focusedElBeforeOpen && focusedElBeforeOpen.focus();
+    };
+  }, []);
+
   return createPortal(
     html`
-      <div role="dialog" class="modal active">
+      <div role="dialog" class="modal active" ref=${ref}>
         <a
           href="#close"
           class="modal-overlay"
@@ -851,6 +877,7 @@ function HttpsBanner() {
     <p>
       <b>STOP!</b> This page <b>must</b> be served over HTTPS. Please
       <a
+        href="#https"
         onClick=${() => {
           location.href = location.href.replace(`http://`, "https://");
         }}
