@@ -197,14 +197,14 @@ function Prompt({ header, body, onConfirm, onClose }) {
 }
 
 function usePrompt(onConfirm) {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setOpen] = useState(false);
 
-  function showPrompt() {
+  function show() {
     setOpen(true);
   }
 
   function handleConfirm(...args) {
-    onConfirm(...args);
+    onConfirm && onConfirm(...args);
     setOpen(false);
   }
 
@@ -213,10 +213,10 @@ function usePrompt(onConfirm) {
   }
 
   return {
-    showPrompt,
+    show,
     onConfirm: handleConfirm,
     onClose: handleClose,
-    open,
+    isOpen,
   };
 }
 
@@ -587,6 +587,7 @@ function AppTile({ app, appInstalled }) {
   const apps = useApps();
 
   const customAppPrompt = usePrompt(apps.upload);
+  const appInterfacePrompt = usePrompt();
 
   let version = getVersionInfo(app, appInstalled);
   let versionInfo = version.text;
@@ -623,6 +624,7 @@ function AppTile({ app, appInstalled }) {
       html`<${AppButton}
         title="Download data from app"
         iconName="icon-download"
+        onClick=${appInterfacePrompt.show}
       />`}
       ${app.allow_emulator &&
       html`<${AppButton}
@@ -653,16 +655,20 @@ function AppTile({ app, appInstalled }) {
       html`<${AppButton}
         title="Customise and Upload App"
         iconName="icon-menu"
-        onClick=${customAppPrompt.showPrompt}
+        onClick=${customAppPrompt.show}
       />`}
     </div>
-    ${customAppPrompt.open &&
+    ${customAppPrompt.isOpen &&
     html`
       <${CustomAppDialog}
         app=${app}
         onClose=${customAppPrompt.onClose}
         onConfirm=${customAppPrompt.onConfirm}
       />
+    `}
+    ${appInterfacePrompt.isOpen &&
+    html`
+      <${AppInterfaceDialog} app=${app} onClose=${appInterfacePrompt.onClose} />
     `}
   </div> `;
 }
@@ -706,6 +712,68 @@ function CustomAppDialog({ onClose, onConfirm, app }) {
       body=${html`<iframe
         src="apps/${app.id}/${app.custom}"
         style="width:100%;height:100%;border:0px;"
+        ref=${ref}
+      ></iframe>`}
+    />
+  `;
+}
+
+function AppInterfaceDialog({ onClose, app }) {
+  const [loaded, setLoaded] = useState(false);
+  const ref = useRef();
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    const { contentWindow: iframeWindow } = ref.current;
+
+    function handleMessage(event) {
+      const msg = event.data;
+
+      if (msg.type === "eval") {
+        Puck.eval(msg.data, function (result) {
+          iframeWindow.postMessage({
+            type: "evalrsp",
+            data: result,
+            id: msg.id,
+          });
+        });
+      } else if (msg.type === "write") {
+        Puck.write(msg.data, function (result) {
+          iframeWindow.postMessage({
+            type: "writersp",
+            data: result,
+            id: msg.id,
+          });
+        });
+      } else if (msg.type === "readstoragefile") {
+        Comms.readStorageFile(msg.data /*filename*/).then(function (result) {
+          iframeWindow.postMessage({
+            type: "readstoragefilersp",
+            data: result,
+            id: msg.id,
+          });
+        });
+      }
+
+      iframeWindow.postMessage({ type: "init" });
+    }
+
+    iframeWindow.addEventListener("message", handleMessage);
+
+    return () => {
+      iframeWindow.removeEventListener("message", handleMessage);
+    };
+  }, [loaded]);
+
+  return html`
+    <${Dialog}
+      onClose=${onClose}
+      header=${app.name}
+      body=${html`<iframe
+        src="apps/${app.id}/${app.interface}"
+        style="width:100%;height:100%;border:0px;"
+        onLoad=${() => setLoaded(true)}
         ref=${ref}
       ></iframe>`}
     />
@@ -832,7 +900,6 @@ function AppsLibrary() {
 
 function InstalledApps() {
   const apps = useApps();
-  const settings = useSettings();
 
   const list =
     apps.installed &&
@@ -854,6 +921,7 @@ function InstalledApps() {
   />`;
 }
 
+//TODO pretokenise
 function About() {
   const apps = useApps();
   const removeAllPrompt = usePrompt(apps.removeAll);
@@ -892,10 +960,10 @@ function About() {
       <h3>Utilities</h3>
       <p>
         <button class="btn" onClick=${apps.setTime}>Set Bangle.js Time</button>
-        <button class="btn" onClick=${removeAllPrompt.showPrompt}>
+        <button class="btn" onClick=${removeAllPrompt.show}>
           Remove all Apps
         </button>
-        <button class="btn" onClick=${installDefaultPrompt.showPrompt}>
+        <button class="btn" onClick=${installDefaultPrompt.show}>
           Install default apps
         </button>
       </p>
@@ -907,7 +975,7 @@ function About() {
           faster apps)
         </label>
       </div>
-      ${removeAllPrompt.open &&
+      ${removeAllPrompt.isOpen &&
       html`
         <${Prompt}
           header="Remove all"
@@ -916,7 +984,7 @@ function About() {
           onClose=${removeAllPrompt.onClose}
         />
       `}
-      ${installDefaultPrompt.open &&
+      ${installDefaultPrompt.isOpen &&
       html`
         <${Prompt}
           header="Install Defaults"
