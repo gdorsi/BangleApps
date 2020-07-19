@@ -827,12 +827,39 @@ const chips = {
   ],
 };
 
+function useDebouncedInput(onChange, initialValue) {
+  const [value, setValue] = useState(initialValue || '');
+
+  const timeout = useRef();
+
+  function handleInput(evt) {
+    const value = evt.target.value;
+
+    setValue(value);
+
+    clearTimeout(timeout.current);
+    timeout.current = setTimeout(() => onChange(value), 500);
+  }
+
+  return {
+    onInput: handleInput,
+    value
+  }
+}
+
 function AppFilters() {
   const filters = useFilters();
 
-  function handleInput(evt) {
-    filters.setSearch(evt.target.value.toLowerCase());
-  }
+  /**
+   * The app list update is an operation that sometimes 
+   * runs over the 60FPS time budget
+   * 
+   * That's why we reduce the list update operations by
+   * debouncing the searchInput handler
+   */
+  const searchInput = useDebouncedInput(value => {
+    filters.setSearch(value.toLowerCase()); //TODO move the normalization inside the useFilters hook
+  });
 
   return html`<div>
     <div>
@@ -840,7 +867,7 @@ function AppFilters() {
         class="form-input"
         type="text"
         placeholder="Keywords..."
-        onInput=${handleInput}
+        ...${searchInput}
       />
     </div>
     <div>
