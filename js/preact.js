@@ -10,12 +10,6 @@ import htm from "https://cdn.skypack.dev/htm";
 
 const html = htm.bind(h);
 
-/** LEGACY things */
-//This is required by Comm.uploadApp
-window.SETTINGS = {
-  pretokenise: true,
-};
-
 /** UTILS */
 function createSharedHook(hook, defaultValue) {
   const ctx = createContext(defaultValue);
@@ -491,7 +485,24 @@ const [AppsProvider, useApps] = createSharedHook(function () {
 });
 
 const [SettingsProvider, useSettings] = createSharedHook(function () {
-  const [pretokenise, setPretokenise] = useState(true);
+  const [pretokenise, setPretokenise] = useState(() => {
+    const saved = localStorage.getItem("pretokenise");
+
+    if (saved) {
+      return JSON.parse(saved);
+    }
+
+    return true;
+  });
+
+  useEffect(() => {
+    //This is required by Comm.uploadApp
+    window.SETTINGS = {
+      pretokenise,
+    };
+
+    localStorage.setItem("pretokenise", JSON.stringify(pretokenise));
+  }, [pretokenise]);
 
   return {
     pretokenise,
@@ -538,7 +549,6 @@ const [FiltersProvider, useFilters] = createSharedHook(function () {
 
 export function AppList() {
   const apps = useApps();
-  const settings = useSettings();
   const filters = useFilters();
 
   if (!apps.list) return;
@@ -921,11 +931,11 @@ function InstalledApps() {
   />`;
 }
 
-//TODO pretokenise
 function About() {
   const apps = useApps();
   const removeAllPrompt = usePrompt(apps.removeAll);
   const installDefaultPrompt = usePrompt(apps.installDefaultApps);
+  const settings = useSettings();
 
   return html`<div class="hero bg-gray">
       <div class="hero-body">
@@ -970,7 +980,11 @@ function About() {
       <h3>Settings</h3>
       <div class="form-group">
         <label class="form-switch">
-          <input type="checkbox" id="settings-pretokenise" />
+          <input
+            type="checkbox"
+            onChange=${(evt) => settings.setPretokenise(evt.target.checked)}
+            checked=${settings.pretokenise}
+          />
           <i class="form-icon"></i> Pretokenise apps before upload (smaller,
           faster apps)
         </label>
