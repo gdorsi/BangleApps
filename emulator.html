@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=0.8,maximum-scale=0.8, minimum-scale=0.8, shrink-to-fit=no"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="img/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="img/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="img/favicon-16x16.png"
+    />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="mask-icon" href="img/safari-pinned-tab.svg" color="#5755d9" />
+    <meta name="apple-mobile-web-app-title" content="BangleApps" />
+    <meta name="application-name" content="BangleApps" />
+    <meta name="msapplication-TileColor" content="#5755d9" />
+    <meta name="theme-color" content="#5755d9" />
+    <title>Bangle.js App Loader</title>
+    <style>
+      .editor__canvas__terminal {
+        visibility: hidden;
+      }
+
+      .editor__canvas__terminal.loaded {
+        visibility: visible;
+      }
+
+      .editor__canvas__terminal.loaded + .loader {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="editor__canvas__terminal"></div>
+    <div class="loader">Loading...</div>
+    <script src="lib/espruinotools.js"></script>
+    <script src="https://www.espruino.com/ide/js/plugins/emulator_espruino.js"></script>
+    <script src="https://www.espruino.com/ide/js/plugins/emulator.js"></script>
+    <script>
+      //This are globals used by Serial. Without them Serial breaks
+      //TODO Open an issue on esprinoide
+      window.connectionInfo = undefined;
+      window.connectedPort = undefined;
+
+      const codeurl = new URL(location.href).searchParams.get("codeurl");
+
+      const getCode = fetch(codeurl).then((res) => res.text());
+
+      Espruino.Core.Serial.open(
+        "Emulator",
+        () => {
+          console.log("Connected");
+
+          getCode.then((code) => {
+            Espruino.Core.CodeWriter.writeToEspruino(code, () => {
+              console.log("Done!");
+
+              document
+                .querySelector(".editor__canvas__terminal")
+                .classList.add("loaded");
+            });
+          });
+        },
+        () => console.log("Disconnected")
+      );
+    </script>
+  </body>
+</html>

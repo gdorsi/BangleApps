@@ -50,7 +50,7 @@ function getFocusableElements(el) {
 }
 
 /** EFFECTS */
-function runEmulator(app) {
+function getEmulatorURL(app) {
   let file = app.storage.find((f) => f.name.endsWith(".js"));
   if (!file) {
     console.error("No entrypoint found for " + appid);
@@ -59,7 +59,8 @@ function runEmulator(app) {
   let baseurl = window.location.href;
   baseurl = baseurl.substr(0, baseurl.lastIndexOf("/"));
   let url = baseurl + "/apps/" + app.id + "/" + file.url;
-  window.open(`https://espruino.com/ide/emulator.html?codeurl=${url}&upload`);
+
+  return `/emulator.html?codeurl=${url}`;
 }
 
 function Dialog({ header, body, footer, onClose }) {
@@ -598,6 +599,7 @@ function AppTile({ app, appInstalled }) {
 
   const customAppPrompt = usePrompt(apps.upload);
   const appInterfacePrompt = usePrompt();
+  const emulatorPrompt = usePrompt();
 
   let version = getVersionInfo(app, appInstalled);
   let versionInfo = version.text;
@@ -640,7 +642,7 @@ function AppTile({ app, appInstalled }) {
       html`<${AppButton}
         title="Try in Emulator"
         iconName="icon-share"
-        onClick=${() => runEmulator(app)}
+        onClick=${emulatorPrompt.show}
       />`}
       ${version.canUpdate &&
       html`<${AppButton}
@@ -680,6 +682,8 @@ function AppTile({ app, appInstalled }) {
     html`
       <${AppInterfaceDialog} app=${app} onClose=${appInterfacePrompt.onClose} />
     `}
+    ${emulatorPrompt.isOpen &&
+    html` <${EmulatorDialog} app=${app} onClose=${emulatorPrompt.onClose} /> `}
   </div> `;
 }
 
@@ -790,6 +794,19 @@ function AppInterfaceDialog({ onClose, app }) {
   `;
 }
 
+function EmulatorDialog({ onClose, app }) {
+  return html`
+    <${Dialog}
+      onClose=${onClose}
+      header=${app.name}
+      body=${html`<iframe
+        src=${getEmulatorURL(app)}
+        style="width: 264px;height: 244px;border:0px;"
+      ></iframe>`}
+    />
+  `;
+}
+
 function AppButton({
   class: className = "",
   iconName = "",
@@ -828,7 +845,7 @@ const chips = {
 };
 
 function useDebouncedInput(onChange, initialValue) {
-  const [value, setValue] = useState(initialValue || '');
+  const [value, setValue] = useState(initialValue || "");
 
   const timeout = useRef();
 
@@ -843,21 +860,21 @@ function useDebouncedInput(onChange, initialValue) {
 
   return {
     onInput: handleInput,
-    value
-  }
+    value,
+  };
 }
 
 function AppFilters() {
   const filters = useFilters();
 
   /**
-   * The app list update is an operation that sometimes 
+   * The app list update is an operation that sometimes
    * runs over the 60FPS time budget
-   * 
+   *
    * That's why we reduce the list update operations by
    * debouncing the searchInput handler
    */
-  const searchInput = useDebouncedInput(value => {
+  const searchInput = useDebouncedInput((value) => {
     filters.setSearch(value.toLowerCase()); //TODO move the normalization inside the useFilters hook
   });
 
