@@ -198,14 +198,12 @@ function Prompt({ header, body, onConfirm, onClose }) {
 
 function usePrompt(onConfirm) {
   const [open, setOpen] = useState(false);
-  const [args, setArgs] = useState();
 
-  function showPrompt(...args) {
+  function showPrompt() {
     setOpen(true);
-    setArgs(args);
   }
 
-  function handleConfirm() {
+  function handleConfirm(...args) {
     onConfirm(...args);
     setOpen(false);
   }
@@ -378,21 +376,6 @@ const [AppsProvider, useApps] = createSharedHook(function () {
       );
   }
 
-  function handleCustomApp() {
-    return Promise.reject(new Error("Not implemented yet"));
-  }
-
-  function customApp(app) {
-    return handleCustomApp(app)
-      .then((app) => {
-        if (app) setAppsInstalled((installed) => installed.concat(app));
-        showToast(app.name + " Uploaded!", "success");
-      })
-      .catch((err) => {
-        showToast("Customise failed, " + err, "error");
-      });
-  }
-
   function remove(app) {
     return getInstalledApps()
       .then((installed) => {
@@ -497,7 +480,6 @@ const [AppsProvider, useApps] = createSharedHook(function () {
     installed,
     upload,
     update,
-    customApp,
     remove,
     removeAll,
     getInstalledApps,
@@ -604,6 +586,8 @@ export function AppList() {
 function AppTile({ app, appInstalled }) {
   const apps = useApps();
 
+  const customAppPrompt = usePrompt(apps.upload);
+
   let version = getVersionInfo(app, appInstalled);
   let versionInfo = version.text;
   let readme = `<a class="c-hand" onclick="showReadme('${app.id}')">Read more...</a>`;
@@ -669,10 +653,63 @@ function AppTile({ app, appInstalled }) {
       html`<${AppButton}
         title="Customise and Upload App"
         iconName="icon-menu"
-        onClick=${() => apps.customApp(app)}
+        onClick=${customAppPrompt.showPrompt}
       />`}
     </div>
+    ${customAppPrompt.open &&
+    html`
+      <${CustomAppDialog}
+        app=${app}
+        onClose=${customAppPrompt.onClose}
+        onConfirm=${customAppPrompt.onConfirm}
+      />
+    `}
   </div> `;
+}
+
+function CustomAppDialog({ onClose, onConfirm, app }) {
+  const ref = useRef();
+
+  useEffect(() => {
+    const { contentWindow: iframeWindow } = ref.current;
+
+    function handleMessage(event) {
+      const appFiles = event.data;
+      const customizedApp = JSON.parse(JSON.stringify(app));
+
+      // copy extra keys from appFiles
+      Object.keys(appFiles).forEach((k) => {
+        if (k != "storage") customizedApp[k] = appFiles[k];
+      });
+
+      appFiles.storage.forEach((f) => {
+        customizedApp.storage = customizedApp.storage.filter(
+          (s) => s.name != f.name
+        ); // remove existing item
+        customizedApp.storage.push(f); // add new
+      });
+
+      onConfirm(customizedApp);
+    }
+
+    iframeWindow.addEventListener("message", handleMessage);
+
+    return () => {
+      iframeWindow.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  return html`
+    <${Dialog}
+      onClose=${onClose}
+      header=${app.name}
+      body=${html`<iframe
+        src="apps/${app.id}/${app.custom}"
+        style="width:100%;height:100%;border:0px;"
+        ref=${ref}
+      ></iframe>`}
+    />
+  `;
 }
 
 function AppButton({
