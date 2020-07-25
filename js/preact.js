@@ -1,28 +1,85 @@
-import { h, render, createContext } from "https://cdn.skypack.dev/preact";
+import { h, render } from "https://cdn.skypack.dev/preact";
 import { createPortal } from "https://cdn.skypack.dev/preact/compat";
 import {
   useState,
   useEffect,
-  useContext,
   useRef,
+  useLayoutEffect,
 } from "https://cdn.skypack.dev/preact/hooks";
 import htm from "https://cdn.skypack.dev/htm";
 
 const html = htm.bind(h);
 
-/** UTILS */
-function createSharedHook(hook, defaultValue) {
-  const ctx = createContext(defaultValue);
+function createStateAtom(defaultValue) {
+  const listeners = new Set();
 
-  function Provider(props) {
-    return h(ctx.Provider, { value: hook(props) }, props.children);
+  const atom = {
+    add: listeners.add.bind(listeners),
+    remove: listeners.delete.bind(listeners),
+    state: defaultValue,
+    setState,
+  };
+
+  function setState(state) {
+    atom.state = state;
+    listeners.forEach((cb) => cb(state));
   }
 
-  function consumerHook() {
-    return useContext(ctx);
+  return atom;
+}
+
+function registerAtomEffect(atom, effect, callOnInit = false) {
+  atom.add(effect);
+  callOnInit && effect(atom.state);
+}
+
+function createSelector(fetcher, stateAtom = createStateAtom()) {
+  const atom = createStateAtom({});
+
+  let promise;
+
+  function fetch() {
+    const data = fetcher(stateAtom.state);
+
+    if (!data || !data.then) {
+      return atom.setState({ data });
+    }
+
+    const current = (promise = data);
+
+    current
+      .then((data) => {
+        if (current === promise) {
+          atom.setState({ data });
+        }
+      })
+      .catch((error) => {
+        if (current === promise) {
+          atom.setState({ ...atom.state, error });
+        }
+      });
   }
 
-  return [Provider, consumerHook];
+  stateAtom.add(fetch);
+  fetch();
+
+  return atom;
+}
+
+function useAtom(atom) {
+  const [state, setState] = useState(atom.state);
+
+  useLayoutEffect(() => {
+    atom.add(setState);
+
+    return () => atom.remove(setState);
+  }, []);
+
+  return [state, atom.setState];
+}
+
+function useAtomValue(atom) {
+  return useAtom(atom)[0];
 }
 
 /** GETTERS */
@@ -215,38 +272,66 @@ function usePrompt(onConfirm) {
   };
 }
 
-const [AppsProvider, useApps] = createSharedHook(function () {
-  const [list, setAppList] = useState();
-  const [installed, setAppsInstalled] = useState();
-  const maybeConnected = Boolean(installed);
-
-  useEffect(() => {
-    httpGet("apps.json").then((apps) => {
-      try {
-        setAppList(JSON.parse(apps));
-      } catch (e) {
-        console.log(e);
-        showToast("App List Corrupted", "error");
-      }
-    });
-  }, []);
-
-  function getInstalledApps(refresh) {
-    if (installed && !refresh) {
-      return Promise.resolve(installed);
+const appListAtom = createSelector(() =>
+  httpGet("apps.json").then((apps) => {
+    try {
+      return JSON.parse(apps);
+    } catch (e) {
+      console.log(e);
+      showToast("App List Corrupted", "error");
     }
+  })
+);
 
-    // Get apps and files
+const installedAtom = createStateAtom(null);
+
+function useInstalledApps() {
+  const [list, set] = useAtom(installedAtom);
+
+  function loadFromTheDevice() {
     return Comms.getInstalledApps().then((apps) => {
-      setAppsInstalled(apps);
+      set(apps);
 
       return apps;
     });
   }
 
-  function refreshInstalled() {
-    return getInstalledApps(true);
+  function disconnect() {
+    Comms.disconnectDevice();
+    set(null);
   }
+
+  return {
+    list,
+    set,
+    loadFromTheDevice,
+    disconnect,
+  };
+}
+
+function useIsConnected() {
+  return useInstalledApps().list !== null;
+}
+
+function useAppsUtils() {
+  function setTime() {
+    Comms.setTime().then(
+      () => {
+        showToast("Time set successfully", "success");
+      },
+      (err) => {
+        showToast("Error setting time, " + err, "error");
+      }
+    );
+  }
+
+  return { setTime };
+}
+
+function useAppInstaller() {
+  const list = useAtomValue(appListAtom).data;
+  const installed = useInstalledApps();
+  const isConnected = useIsConnected();
 
   /// check for dependencies the app needs and install them if required
   function checkDependencies(app) {
@@ -260,7 +345,7 @@ const [AppsProvider, useApps] = createSharedHook(function () {
 
       console.log(`Searching for dependency on app type '${dependency}'`);
 
-      let found = installed.find((app) => app.type == dependency);
+      let found = installed.list.find((app) => app.type == dependency);
 
       if (found) {
         console.log(`Found dependency in installed app '${found.id}'`);
@@ -285,7 +370,7 @@ const [AppsProvider, useApps] = createSharedHook(function () {
       promise = promise.then(() => {
         console.log(`Install dependency '${dependency}':'${found.id}'`);
         return Comms.uploadApp(found).then((app) => {
-          if (app) setAppsInstalled((installed) => installed.concat(app));
+          if (app) installed.set((list) => list.concat(app));
         });
       });
     });
@@ -293,11 +378,15 @@ const [AppsProvider, useApps] = createSharedHook(function () {
     return promise;
   }
 
-  //TODO Move the connection check outside
-  function upload(app) {
-    return getInstalledApps()
-      .then((appsInstalled) => {
-        if (appsInstalled.some((i) => i.id === app.id)) {
+  function install(app) {
+    //TODO Move the connection check outside
+    let promise = isConnected
+      ? Promise.resolve(installed.list)
+      : installed.loadFromTheDevice();
+
+    return promise
+      .then((list) => {
+        if (list.some((i) => i.id === app.id)) {
           return update(app);
         }
 
@@ -306,7 +395,7 @@ const [AppsProvider, useApps] = createSharedHook(function () {
           .then((app) => {
             Progress.hide({ sticky: true });
             if (app) {
-              setAppsInstalled((installed) => installed.concat(app));
+              installed.set((list) => list.concat(app));
             }
             showToast(app.name + " Uploaded!", "success");
           })
@@ -321,12 +410,15 @@ const [AppsProvider, useApps] = createSharedHook(function () {
   }
 
   function update(app) {
-    if (app.custom) return customApp(app);
+    //TODO Move the connection check outside
+    let promise = isConnected
+      ? Promise.resolve(installed.list)
+      : installed.loadFromTheDevice();
 
-    return getInstalledApps()
-      .then((installed) => {
+    return promise
+      .then((list) => {
         // a = from appid.info, app = from apps.json
-        let remove = installed.find((a) => a.id === app.id);
+        let remove = list.find((a) => a.id === app.id);
         // no need to remove files which will be overwritten anyway
         remove.files = remove.files
           .split(",")
@@ -352,16 +444,14 @@ const [AppsProvider, useApps] = createSharedHook(function () {
       .then(() => {
         showToast(`Updating ${app.name}...`);
 
-        setAppsInstalled((installed) =>
-          installed.filter((a) => a.id != app.id)
-        );
+        installed.set((list) => list.filter((a) => a.id != app.id));
 
         return checkDependencies(app);
       })
       .then(() => Comms.uploadApp(app))
       .then(
         (app) => {
-          if (app) setAppsInstalled((installed) => installed.concat(app));
+          if (app) installed.set((list) => list.concat(app));
 
           showToast(app.name + " Updated!", "success");
         },
@@ -372,22 +462,15 @@ const [AppsProvider, useApps] = createSharedHook(function () {
   }
 
   function remove(app) {
-    return getInstalledApps()
-      .then((installed) => {
-        // a = from appid.info, app = from apps.json
-        return Comms.removeApp(installed.find((a) => a.id === app.id));
-      })
-      .then(
-        () => {
-          setAppsInstalled((installed) =>
-            installed.filter((a) => a.id != app.id)
-          );
-          showToast(app.name + " removed successfully", "success");
-        },
-        (err) => {
-          showToast(app.name + " removal failed, " + err, "error");
-        }
-      );
+    return Comms.removeApp(installed.list.find((a) => a.id === app.id)).then(
+      () => {
+        installed.set((list) => list.filter((a) => a.id != app.id));
+        showToast(app.name + " removed successfully", "success");
+      },
+      (err) => {
+        showToast(app.name + " removal failed, " + err, "error");
+      }
+    );
   }
 
   function removeAll() {
@@ -395,7 +478,7 @@ const [AppsProvider, useApps] = createSharedHook(function () {
       .then(() => {
         Progress.hide({ sticky: true });
         showToast("All apps removed", "success");
-        return refreshInstalled();
+        return installed.loadFromTheDevice();
       })
       .catch((err) => {
         Progress.hide({ sticky: true });
@@ -403,66 +486,65 @@ const [AppsProvider, useApps] = createSharedHook(function () {
       });
   }
 
-  function setTime() {
-    Comms.setTime().then(
-      () => {
-        showToast("Time set successfully", "success");
-      },
-      (err) => {
-        showToast("Error setting time, " + err, "error");
-      }
-    );
-  }
-
   function installMultipleApps(appIds) {
     let apps = appIds.map((appid) => list.find((app) => app.id == appid));
+
     if (apps.some((x) => x === undefined))
       return Promise.reject("Not all apps found");
+
     let appCount = apps.length;
-    return Comms.removeAllApps()
-      .then(() => {
-        Progress.hide({ sticky: true });
-        showToast(`Existing apps removed. Installing  ${appCount} apps...`);
-        return new Promise((resolve, reject) => {
-          function upload() {
-            let app = apps.shift();
-            if (app === undefined) return resolve();
-            Progress.show({
-              title: `${app.name} (${appCount - apps.length}/${appCount})`,
-              sticky: true,
-            });
-            checkDependencies(app, "skip_reset")
-              .then(() => Comms.uploadApp(app, "skip_reset"))
-              .then((appJSON) => {
-                Progress.hide({ sticky: true });
-                if (appJSON)
-                  setAppsInstalled((installed) => installed.concat(app));
-                showToast(
-                  `(${appCount - apps.length}/${appCount}) ${app.name} Uploaded`
-                );
-                upload();
-              })
-              .catch(function () {
-                Progress.hide({ sticky: true });
-                reject();
-              });
-          }
-          upload();
+
+    showToast(`Installing  ${appCount} apps...`);
+
+    return new Promise((resolve, reject) => {
+      function uploadNextApp() {
+        let app = apps.shift();
+
+        if (app === undefined) return resolve();
+
+        Progress.show({
+          title: `${app.name} (${appCount - apps.length}/${appCount})`,
+          sticky: true,
+        });
+
+        checkDependencies(app, "skip_reset")
+          .then(() => Comms.uploadApp(app, "skip_reset"))
+          .then((appJSON) => {
+            Progress.hide({ sticky: true });
+
+            if (appJSON) installed.set((list) => list.concat(app));
+
+            showToast(
+              `(${appCount - apps.length}/${appCount}) ${app.name} Uploaded`
+            );
+
+            uploadNextApp();
+          })
+          .catch(function () {
+            Progress.hide({ sticky: true });
+            reject();
+          });
+      }
+
+      uploadNextApp();
+    }).then(() => {
+      showToast("Apps successfully installed!", "success");
+      return installed.loadFromTheDevice();
+    });
+  }
+
+  function resetToDefaultApps() {
+    httpGet("defaultapps.json")
+      .then((json) => {
+        return Comms.removeAllApps().then(() => {
+          Progress.hide({ sticky: true });
+          showToast(`Existing apps removed.`);
+
+          return installMultipleApps(JSON.parse(json));
         });
       })
       .then(() => {
         return Comms.setTime();
-      })
-      .then(() => {
-        showToast("Apps successfully installed!", "success");
-        return getInstalledApps(true);
-      });
-  }
-
-  function installDefaultApps() {
-    httpGet("defaultapps.json")
-      .then((json) => {
-        return installMultipleApps(JSON.parse(json), "default");
       })
       .catch((err) => {
         Progress.hide({ sticky: true });
@@ -471,22 +553,17 @@ const [AppsProvider, useApps] = createSharedHook(function () {
   }
 
   return {
-    list,
-    installed,
-    upload,
+    install,
     update,
     remove,
     removeAll,
-    getInstalledApps,
-    refreshInstalled,
-    setTime,
-    installDefaultApps,
-    maybeConnected,
+    installMultipleApps,
+    resetToDefaultApps,
   };
-});
+}
 
-const [SettingsProvider, useSettings] = createSharedHook(function () {
-  const [pretokenise, setPretokenise] = useState(() => {
+const pretokeniseAtom = createStateAtom(
+  (() => {
     const saved = localStorage.getItem("pretokenise");
 
     if (saved) {
@@ -494,48 +571,46 @@ const [SettingsProvider, useSettings] = createSharedHook(function () {
     }
 
     return true;
-  });
+  })()
+);
 
-  useEffect(() => {
-    //This is required by Comm.uploadApp
-    window.SETTINGS = {
-      pretokenise,
-    };
-
-    localStorage.setItem("pretokenise", JSON.stringify(pretokenise));
-  }, [pretokenise]);
-
-  return {
+registerAtomEffect(pretokeniseAtom, (pretokenise) => {
+  //This is required by Comm.uploadApp
+  window.SETTINGS = {
     pretokenise,
-    setPretokenise,
   };
+
+  localStorage.setItem("pretokenise", JSON.stringify(pretokenise));
 });
 
-const [FiltersProvider, useFilters] = createSharedHook(function () {
-  const [active, setActive] = useState("");
-  const [sort, setSort] = useState("");
-  const [sortInfo, setSortInfo] = useState();
-  const [search, setSearch] = useState("");
+const activeCategoryAtom = createStateAtom("");
+const sortAtom = createStateAtom("");
+const searchAtom = createStateAtom("");
+const sortInfoAtom = createSelector(() =>
+  httpGet("appdates.csv")
+    .then((csv) => {
+      const appSortInfo = {};
 
-  useEffect(() => {
-    httpGet("appdates.csv")
-      .then((csv) => {
-        const appSortInfo = {};
-
-        csv.split("\n").forEach((line) => {
-          let l = line.split(",");
-          appSortInfo[l[0]] = {
-            created: Date.parse(l[1]),
-            modified: Date.parse(l[2]),
-          };
-        });
-
-        setSortInfo(appSortInfo);
-      })
-      .catch(() => {
-        console.log("No recent.csv - app sort disabled");
+      csv.split("\n").forEach((line) => {
+        let l = line.split(",");
+        appSortInfo[l[0]] = {
+          created: Date.parse(l[1]),
+          modified: Date.parse(l[2]),
+        };
       });
-  }, []);
+
+      return appSortInfo;
+    })
+    .catch(() => {
+      console.log("No recent.csv - app sort disabled");
+    })
+);
+
+const useFilters = () => {
+  const [active, setActive] = useAtom(activeCategoryAtom);
+  const [sort, setSort] = useAtom(sortAtom);
+  const sortInfo = useAtomValue(sortInfoAtom).data;
+  const [search, setSearch] = useAtom(searchAtom);
 
   return {
     active,
@@ -546,15 +621,16 @@ const [FiltersProvider, useFilters] = createSharedHook(function () {
     search,
     setSearch,
   };
-});
+};
 
 export function AppList() {
-  const apps = useApps();
+  const appList = useAtomValue(appListAtom).data;
+  const installedApps = useInstalledApps();
   const filters = useFilters();
 
-  if (!apps.list) return;
+  if (!appList) return;
 
-  let visibleApps = apps.list.slice(); // clone so we don't mess with the original
+  let visibleApps = appList.slice(); // clone so we don't mess with the original
 
   if (filters.active) {
     visibleApps = visibleApps.filter(
@@ -584,7 +660,7 @@ export function AppList() {
 
   return visibleApps.map((app) => {
     let appInstalled =
-      apps.installed && apps.installed.find((a) => a.id == app.id);
+      installedApps.list && installedApps.list.find((a) => a.id == app.id);
 
     return html`<${AppTile}
       key=${app.id}
@@ -595,9 +671,9 @@ export function AppList() {
 }
 
 function AppTile({ app, appInstalled }) {
-  const apps = useApps();
+  const installer = useAppInstaller();
 
-  const customAppPrompt = usePrompt(apps.upload);
+  const customAppPrompt = usePrompt(installer.install);
   const appInterfacePrompt = usePrompt();
   const emulatorPrompt = usePrompt();
 
@@ -648,20 +724,20 @@ function AppTile({ app, appInstalled }) {
       html`<${AppButton}
         title="Update App"
         iconName="icon-refresh"
-        onClick=${() => apps.update(app)}
+        onClick=${() => installer.update(app)}
       />`}
       ${!appInstalled &&
       !app.custom &&
       html`<${AppButton}
         title="Upload App"
         iconName="icon-upload"
-        onClick=${() => apps.upload(app)}
+        onClick=${() => installer.install(app)}
       />`}
       ${appInstalled &&
       html`<${AppButton}
         title="Remove App"
         iconName="icon-delete"
-        onClick=${() => apps.remove(app)}
+        onClick=${() => installer.remove(app)}
       />`}
       ${app.custom &&
       html`<${AppButton}
@@ -953,12 +1029,13 @@ function AppsLibrary() {
 }
 
 function InstalledApps() {
-  const apps = useApps();
+  const appList = useAtomValue(appListAtom).data;
+  const installedApps = useInstalledApps();
 
   const list =
-    apps.installed &&
-    apps.installed.map((appInstalled) => {
-      let app = apps.list.find((a) => a.id == appInstalled.id);
+    installedApps.list &&
+    installedApps.list.map((appInstalled) => {
+      let app = appList.find((a) => a.id == appInstalled.id);
 
       return html`<${AppTile}
         key=${app.id}
@@ -968,7 +1045,10 @@ function InstalledApps() {
     });
 
   return html`<${Panel}
-    header=${html`<button class="btn refresh" onClick=${apps.refreshInstalled}>
+    header=${html`<button
+      class="btn refresh"
+      onClick=${installedApps.loadFromTheDevice}
+    >
       Refresh...
     </button>`}
     body=${list}
@@ -976,10 +1056,12 @@ function InstalledApps() {
 }
 
 function About() {
-  const apps = useApps();
-  const removeAllPrompt = usePrompt(apps.removeAll);
-  const installDefaultPrompt = usePrompt(apps.installDefaultApps);
-  const settings = useSettings();
+  const installer = useAppInstaller();
+  const utils = useAppsUtils();
+
+  const removeAllPrompt = usePrompt(installer.removeAll);
+  const installDefaultPrompt = usePrompt(installer.resetToDefaultApps);
+  const [pretokenise, setPretokenise] = useAtom(pretokeniseAtom);
 
   return html`<div class="hero bg-gray">
       <div class="hero-body">
@@ -1013,7 +1095,7 @@ function About() {
 
       <h3>Utilities</h3>
       <p>
-        <button class="btn" onClick=${apps.setTime}>Set Bangle.js Time</button>
+        <button class="btn" onClick=${utils.setTime}>Set Bangle.js Time</button>
         <button class="btn" onClick=${removeAllPrompt.show}>
           Remove all Apps
         </button>
@@ -1026,8 +1108,8 @@ function About() {
         <label class="form-switch">
           <input
             type="checkbox"
-            onChange=${(evt) => settings.setPretokenise(evt.target.checked)}
-            checked=${settings.pretokenise}
+            onChange=${(evt) => setPretokenise(evt.target.checked)}
+            checked=${pretokenise}
           />
           <i class="form-icon"></i> Pretokenise apps before upload (smaller,
           faster apps)
@@ -1055,7 +1137,8 @@ function About() {
 }
 
 function Header() {
-  const apps = useApps();
+  const installedApps = useInstalledApps();
+  const isConnected = useIsConnected();
 
   return html`<header class="navbar-primary navbar">
     <section class="navbar-section">
@@ -1064,8 +1147,13 @@ function Header() {
       >
     </section>
     <section class="navbar-section">
-      <button class="btn" onClick=${apps.getInstalledApps}>
-        ${apps.maybeConnected ? "Disconnect" : "Connect"}
+      <button
+        class="btn"
+        onClick=${isConnected
+          ? installedApps.disconnect
+          : installedApps.loadFromTheDevice}
+      >
+        ${isConnected ? "Disconnect" : "Connect"}
       </button>
     </section>
   </header>`;
@@ -1118,13 +1206,4 @@ export function Main() {
     </div>`;
 }
 
-render(
-  html`<${AppsProvider}>
-    <${SettingsProvider}>
-      <${FiltersProvider}>
-        <${Main} />
-      <//>
-    <//>
-  <//>`,
-  document.querySelector("#root")
-);
+render(html`<${Main} />`, document.querySelector("#root"));
