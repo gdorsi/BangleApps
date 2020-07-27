@@ -272,15 +272,25 @@ function usePrompt(onConfirm) {
   };
 }
 
+const toastAtom = createStateAtom();
+
+function useToast() {
+  //TODO Make a useAtomSetter in order to avoid useless updates
+  const [, setState] = useAtom(toastAtom);
+
+  function show(msg, type) {
+    setState({
+      msg,
+      type,
+    });
+  }
+
+  return { show };
+}
+
+//TODO Find a way to show errors (maybe with a link between atoms)
 const appListAtom = createSelector(() =>
-  httpGet("apps.json").then((apps) => {
-    try {
-      return JSON.parse(apps);
-    } catch (e) {
-      console.log(e);
-      showToast("App List Corrupted", "error");
-    }
-  })
+  httpGet("apps.json").then((apps) => JSON.parse(apps))
 );
 
 const installedAtom = createStateAtom(null);
@@ -314,13 +324,15 @@ function useIsConnected() {
 }
 
 function useAppsUtils() {
+  const toast = useToast();
+
   function setTime() {
     Comms.setTime().then(
       () => {
-        showToast("Time set successfully", "success");
+        toast.show("Time set successfully", "success");
       },
       (err) => {
-        showToast("Error setting time, " + err, "error");
+        toast.show("Error setting time, " + err, "error");
       }
     );
   }
@@ -332,6 +344,7 @@ function useAppInstaller() {
   const list = useAtomValue(appListAtom).data;
   const installed = useInstalledApps();
   const isConnected = useIsConnected();
+  const toast = useToast();
 
   /// check for dependencies the app needs and install them if required
   function checkDependencies(app) {
@@ -397,15 +410,15 @@ function useAppInstaller() {
             if (app) {
               installed.set((list) => list.concat(app));
             }
-            showToast(app.name + " Uploaded!", "success");
+            toast.show(app.name + " Uploaded!", "success");
           })
           .catch((err) => {
             Progress.hide({ sticky: true });
-            showToast("Upload failed, " + err, "error");
+            toast.show("Upload failed, " + err, "error");
           });
       })
       .catch((err) => {
-        showToast("Device connection failed, " + err, "error");
+        toast.show("Device connection failed, " + err, "error");
       });
   }
 
@@ -442,7 +455,7 @@ function useAppInstaller() {
         return Comms.removeApp(remove);
       })
       .then(() => {
-        showToast(`Updating ${app.name}...`);
+        toast.show(`Updating ${app.name}...`);
 
         installed.set((list) => list.filter((a) => a.id != app.id));
 
@@ -453,10 +466,10 @@ function useAppInstaller() {
         (app) => {
           if (app) installed.set((list) => list.concat(app));
 
-          showToast(app.name + " Updated!", "success");
+          toast.show(app.name + " Updated!", "success");
         },
         (err) => {
-          showToast(app.name + " update failed, " + err, "error");
+          toast.show(app.name + " update failed, " + err, "error");
         }
       );
   }
@@ -465,10 +478,10 @@ function useAppInstaller() {
     return Comms.removeApp(installed.list.find((a) => a.id === app.id)).then(
       () => {
         installed.set((list) => list.filter((a) => a.id != app.id));
-        showToast(app.name + " removed successfully", "success");
+        toast.show(app.name + " removed successfully", "success");
       },
       (err) => {
-        showToast(app.name + " removal failed, " + err, "error");
+        toast.show(app.name + " removal failed, " + err, "error");
       }
     );
   }
@@ -477,12 +490,12 @@ function useAppInstaller() {
     Comms.removeAllApps()
       .then(() => {
         Progress.hide({ sticky: true });
-        showToast("All apps removed", "success");
+        toast.show("All apps removed", "success");
         return installed.loadFromTheDevice();
       })
       .catch((err) => {
         Progress.hide({ sticky: true });
-        showToast("App removal failed, " + err, "error");
+        toast.show("App removal failed, " + err, "error");
       });
   }
 
@@ -494,7 +507,7 @@ function useAppInstaller() {
 
     let appCount = apps.length;
 
-    showToast(`Installing  ${appCount} apps...`);
+    toast.show(`Installing  ${appCount} apps...`);
 
     return new Promise((resolve, reject) => {
       function uploadNextApp() {
@@ -514,7 +527,7 @@ function useAppInstaller() {
 
             if (appJSON) installed.set((list) => list.concat(app));
 
-            showToast(
+            toast.show(
               `(${appCount - apps.length}/${appCount}) ${app.name} Uploaded`
             );
 
@@ -528,7 +541,7 @@ function useAppInstaller() {
 
       uploadNextApp();
     }).then(() => {
-      showToast("Apps successfully installed!", "success");
+      toast.show("Apps successfully installed!", "success");
       return installed.loadFromTheDevice();
     });
   }
@@ -538,7 +551,7 @@ function useAppInstaller() {
       .then((json) => {
         return Comms.removeAllApps().then(() => {
           Progress.hide({ sticky: true });
-          showToast(`Existing apps removed.`);
+          toast.show(`Existing apps removed.`);
 
           return installMultipleApps(JSON.parse(json));
         });
@@ -548,7 +561,7 @@ function useAppInstaller() {
       })
       .catch((err) => {
         Progress.hide({ sticky: true });
-        showToast("App Install failed, " + err, "error");
+        shotoast.showwToast("App Install failed, " + err, "error");
       });
   }
 
@@ -1182,10 +1195,36 @@ const tabs = [
   ["about", "About"],
 ];
 
+function Toast() {
+  const [state, setState] = useAtom(toastAtom);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setState(null), 5000);
+
+    return () => clearTimeout(timer);
+  }, [state]);
+
+  if (!state) return null;
+
+  const { msg, type } = state;
+  let style = "toast-primary";
+
+  if (type == "success") style = "toast-success";
+  else if (type == "error") style = "toast-error";
+  else if (type == "warning") style = "toast-warning";
+  else if (type !== undefined) console.log("showToast: unknown toast " + type);
+
+  return createPortal(
+    html` <div class="toast ${style}">${msg}</div> `,
+    document.getElementById("toastcontainer")
+  );
+}
+
 export function Main() {
   const [activeTab, setTab] = useState("library");
 
-  return html` <${Header} />
+  return html` <${Toast} />
+    <${Header} />
     <${HttpsBanner} />
     <ul class="tab tab-block">
       ${tabs.map(
