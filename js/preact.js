@@ -68,7 +68,7 @@ function createAsyncAtom(fetcher, effect) {
       })
       .catch((error) => {
         if (current === promise) {
-          setState({ ...atom.state, error });
+          setState({ data: atom.state.data, error });
         }
       });
   }
