@@ -10,72 +10,88 @@ import htm from "https://cdn.skypack.dev/htm";
 
 const html = htm.bind(h);
 
-function createStateAtom(defaultValue) {
+function createStateAtom(init, effect) {
   const listeners = new Set();
+  let cleanup;
 
   const atom = {
     add: listeners.add.bind(listeners),
     remove: listeners.delete.bind(listeners),
-    state: defaultValue,
+    state: null,
     setState,
   };
 
   function setState(state) {
+    if (typeof state === "function") {
+      state = state(atom.state);
+    }
+
+    if (state === atom.state) return;
+
     atom.state = state;
     listeners.forEach((cb) => cb(state));
+
+    effect &&
+      requestAnimationFrame(() => {
+        queueMicrotask(() => {
+          cleanup && cleanup();
+          cleanup = effect(state);
+        });
+      });
   }
+
+  //triggers the effects on startup
+  setState(init);
 
   return atom;
 }
 
-function registerAtomEffect(atom, effect, callOnInit = false) {
-  atom.add(effect);
-  callOnInit && effect(atom.state);
-}
+function createAsyncAtom(fetcher, effect) {
+  const atom = createStateAtom({ init: true }, effect);
 
-function createSelector(fetcher, stateAtom = createStateAtom()) {
-  const atom = createStateAtom({});
+  const setState = atom.setState;
 
   let promise;
 
-  function fetch() {
-    const data = fetcher(stateAtom.state);
-
-    if (!data || !data.then) {
-      return atom.setState({ data });
+  function fetch(value) {
+    if (typeof value === "function") {
+      value = value(atom.state);
     }
 
-    const current = (promise = data);
+    const current = (promise = fetcher(value));
 
     current
       .then((data) => {
         if (current === promise) {
-          atom.setState({ data });
+          setState({ data });
         }
       })
       .catch((error) => {
         if (current === promise) {
-          atom.setState({ ...atom.state, error });
+          setState({ ...atom.state, error });
         }
       });
   }
 
-  stateAtom.add(fetch);
-  fetch();
+  atom.setState = fetch;
 
   return atom;
 }
 
 function useAtom(atom) {
-  const [state, setState] = useState(atom.state);
+  const [state, setLocalState] = useState(atom.state);
 
   useLayoutEffect(() => {
-    atom.add(setState);
+    atom.add(setLocalState);
 
-    return () => atom.remove(setState);
+    return () => atom.remove(setLocalState);
   }, []);
 
   return [state, atom.setState];
+}
+
+function useSetAtomState(atom) {
+  return atom.setState;
 }
 
 function useAtomValue(atom) {
@@ -275,8 +291,7 @@ function usePrompt(onConfirm) {
 const toastAtom = createStateAtom();
 
 function useToast() {
-  //TODO Make a useAtomSetter in order to avoid useless updates
-  const [, setState] = useAtom(toastAtom);
+  const setState = useSetAtomState(toastAtom);
 
   function show(msg, type) {
     setState({
@@ -288,9 +303,30 @@ function useToast() {
   return { show };
 }
 
-//TODO Find a way to show errors (maybe with a link between atoms)
-const appListAtom = createSelector(() =>
-  httpGet("apps.json").then((apps) => JSON.parse(apps))
+const appListAtom = createAsyncAtom(
+  () =>
+    fetch("apps.json").then((res) =>
+      res.ok ? res.json() : Promise.reject(res)
+    ),
+  ({ error, init }) => {
+    if (init) {
+      appListAtom.setState();
+    }
+
+    if (error) {
+      if (error.message) {
+        toastAtom.setState({
+          msg: `${error.toString()} on apps.json`,
+          type: "error",
+        });
+      } else {
+        toastAtom.setState({
+          msg: "Error during the fetch of apps.json",
+          type: "error",
+        });
+      }
+    }
+  }
 );
 
 const installedAtom = createStateAtom(null);
@@ -576,7 +612,7 @@ function useAppInstaller() {
 }
 
 const pretokeniseAtom = createStateAtom(
-  (() => {
+  () => {
     const saved = localStorage.getItem("pretokenise");
 
     if (saved) {
@@ -584,39 +620,46 @@ const pretokeniseAtom = createStateAtom(
     }
 
     return true;
-  })()
+  },
+  (pretokenise) => {
+    //This is required by Comm.uploadApp
+    window.SETTINGS = {
+      pretokenise,
+    };
+
+    localStorage.setItem("pretokenise", JSON.stringify(pretokenise));
+  }
 );
-
-registerAtomEffect(pretokeniseAtom, (pretokenise) => {
-  //This is required by Comm.uploadApp
-  window.SETTINGS = {
-    pretokenise,
-  };
-
-  localStorage.setItem("pretokenise", JSON.stringify(pretokenise));
-});
 
 const activeCategoryAtom = createStateAtom("");
 const sortAtom = createStateAtom("");
 const searchAtom = createStateAtom("");
-const sortInfoAtom = createSelector(() =>
-  httpGet("appdates.csv")
-    .then((csv) => {
-      const appSortInfo = {};
+const sortInfoAtom = createAsyncAtom(
+  () =>
+    fetch("appdates.csv")
+      .then((res) => (res.ok ? res.text() : Promise.reject(res)))
+      .then((csv) => {
+        const appSortInfo = {};
 
-      csv.split("\n").forEach((line) => {
-        let l = line.split(",");
-        appSortInfo[l[0]] = {
-          created: Date.parse(l[1]),
-          modified: Date.parse(l[2]),
-        };
-      });
+        csv.split("\n").forEach((line) => {
+          let l = line.split(",");
+          appSortInfo[l[0]] = {
+            created: Date.parse(l[1]),
+            modified: Date.parse(l[2]),
+          };
+        });
 
-      return appSortInfo;
-    })
-    .catch(() => {
+        return appSortInfo;
+      }),
+  ({ error, init }) => {
+    if (init) {
+      sortInfoAtom.setState();
+    }
+
+    if (error) {
       console.log("No recent.csv - app sort disabled");
-    })
+    }
+  }
 );
 
 const useFilters = () => {
