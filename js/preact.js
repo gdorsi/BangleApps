@@ -759,7 +759,9 @@ function AppTile({ app, appInstalled }) {
         html="${getAppDescription(app)}"
       />
       ${app.readme
-        ? html`<p><a class="c-hand" onClick=${readmePrompt.show}>Read more...</a></p>`
+        ? html`<p>
+            <a class="c-hand" onClick=${readmePrompt.show}>Read more...</a>
+          </p>`
         : ""}
       <a href="${getAppGithubURL(app)}" target="_blank" class="link-github"
         ><img src="img/github-icon-sml.png" alt="See the code on GitHub"
@@ -1246,7 +1248,11 @@ function Header() {
 }
 
 function HttpsBanner() {
-  if (location.href.startsWith("https")) return null;
+  if (
+    location.href.startsWith("https") ||
+    location.href.startsWith("http://localhost")
+  )
+    return null;
 
   return html`<div class="container" style="padding-top:4px">
     <p>
