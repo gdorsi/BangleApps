@@ -732,10 +732,10 @@ function AppTile({ app, appInstalled }) {
   const customAppPrompt = usePrompt(installer.install);
   const appInterfacePrompt = usePrompt();
   const emulatorPrompt = usePrompt();
+  const readmePrompt = usePrompt();
 
   let version = getVersionInfo(app, appInstalled);
   let versionInfo = version.text;
-  let readme = `<a class="c-hand" onclick="showReadme('${app.id}')">Read more...</a>`;
 
   return html`<div class="tile column col-6 col-sm-12 col-xs-12">
     <div class="tile-icon">
@@ -756,8 +756,11 @@ function AppTile({ app, appInstalled }) {
       <${HtmlBlock}
         class="tile-subtitle"
         as="p"
-        html="${getAppDescription(app)}${app.readme ? `<br/>${readme}` : ""}"
+        html="${getAppDescription(app)}"
       />
+      ${app.readme
+        ? html`<p><a class="c-hand" onClick=${readmePrompt.show}>Read more...</a></p>`
+        : ""}
       <a href="${getAppGithubURL(app)}" target="_blank" class="link-github"
         ><img src="img/github-icon-sml.png" alt="See the code on GitHub"
       /></a>
@@ -816,6 +819,8 @@ function AppTile({ app, appInstalled }) {
     `}
     ${emulatorPrompt.isOpen &&
     html` <${EmulatorDialog} app=${app} onClose=${emulatorPrompt.onClose} /> `}
+    ${readmePrompt.isOpen &&
+    html` <${ReadmeDialog} app=${app} onClose=${readmePrompt.onClose} /> `}
   </div> `;
 }
 
@@ -935,6 +940,31 @@ function EmulatorDialog({ onClose, app }) {
         src=${getEmulatorURL(app)}
         style="width: 264px;height: 244px;border:0px;"
       ></iframe>`}
+    />
+  `;
+}
+
+function ReadmeDialog({ onClose, app }) {
+  const [contents, setContents] = useState(null);
+
+  const appPath = `apps/${app.id}/`;
+
+  useEffect(() => {
+    fetch(appPath + app.readme)
+      .then((res) => (res.ok ? res.text() : Promise.reject()))
+      .then((text) => setContents(marked(text, { baseUrl: appPath })))
+      .catch(() => {
+        setContents("Failed to load README.");
+      });
+  }, []);
+
+  if (contents === null) return null;
+
+  return html`
+    <${Dialog}
+      onClose=${onClose}
+      header=${app.name}
+      body=${html`<${HtmlBlock} html=${contents} />`}
     />
   `;
 }
