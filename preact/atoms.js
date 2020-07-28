@@ -1,78 +1,123 @@
+import { h, createContext } from "https://cdn.skypack.dev/preact";
 import {
+  useContext,
+  useMemo,
   useReducer,
   useLayoutEffect,
 } from "https://cdn.skypack.dev/preact/hooks";
 
-//TODO add an optional context provider in order to support SSR
-export function createStateAtom(init, effect) {
-  const listeners = new Set();
-  let cleanup;
+//find a better name
+function makeAtomsState() {
+  const atomsMap = new WeakMap();
 
-  const atom = {
-    add: listeners.add.bind(listeners),
-    remove: listeners.delete.bind(listeners),
-    state: null,
-    setState,
-  };
+  function getAtom(atomRef) {
+    let atom = atomsMap.get(atomRef);
 
-  function setState(state) {
-    if (typeof state === "function") {
-      state = state(atom.state);
+    if (!atom) {
+      atom = atomRef(atomsState);
+      atomsMap.set(atomRef, atom);
     }
 
-    if (state === atom.state) return;
-
-    atom.state = state;
-    listeners.forEach((cb) => cb(state));
-
-    effect &&
-      requestAnimationFrame(() => {
-        queueMicrotask(() => {
-          cleanup && cleanup();
-          cleanup = effect(state);
-        });
-      });
+    return atom;
   }
 
-  //triggers the effects on startup
-  setState(init);
+  const atomsState = {
+    getAtom,
+    get(atomRef) {
+      return getAtom(atomRef).state;
+    },
+    set(atomRef, state) {
+      getAtom(atomRef).setState(state);
+    },
+  };
 
-  return atom;
+  return atomsState;
+}
+
+const ctx = createContext(makeAtomsState());
+
+export function AtomsState({ children }) {
+  return h(ctx.Provider, { value: useMemo(makeAtomsState, []) }, children);
+}
+
+export function useAtomsState() {
+  return useContext(ctx);
+}
+
+export function createStateAtom(init, effect) {
+  return function (atomsState) {
+    const listeners = new Set();
+    let cleanup;
+
+    const atom = {
+      add: listeners.add.bind(listeners),
+      remove: listeners.delete.bind(listeners),
+      state: null,
+      setState,
+    };
+
+    function setState(state) {
+      if (typeof state === "function") {
+        state = state(atom.state);
+      }
+
+      if (state === atom.state) return;
+
+      atom.state = state;
+      listeners.forEach((cb) => cb(state));
+
+      effect &&
+        requestAnimationFrame(() => {
+          queueMicrotask(() => {
+            cleanup && cleanup();
+            cleanup = effect(state, atomsState);
+          });
+        });
+    }
+
+    //triggers the effects on startup
+    setState(init);
+
+    return atom;
+  };
 }
 
 export function createAsyncAtom(fetcher, effect) {
-  const atom = createStateAtom({ init: true }, effect);
+  return function (atomsState) {
+    const atom = createStateAtom({ init: true }, effect)(atomsState);
 
-  const setState = atom.setState;
+    const setState = atom.setState;
 
-  let promise;
+    let promise;
 
-  function fetch(value) {
-    if (typeof value === "function") {
-      value = value(atom.state);
+    function fetch(value) {
+      if (typeof value === "function") {
+        value = value(atom.state);
+      }
+
+      const current = (promise = fetcher(value));
+
+      current
+        .then((data) => {
+          if (current === promise) {
+            setState({ data });
+          }
+        })
+        .catch((error) => {
+          if (current === promise) {
+            setState({ data: atom.state.data, error });
+          }
+        });
     }
 
-    const current = (promise = fetcher(value));
+    atom.setState = fetch;
 
-    current
-      .then((data) => {
-        if (current === promise) {
-          setState({ data });
-        }
-      })
-      .catch((error) => {
-        if (current === promise) {
-          setState({ data: atom.state.data, error });
-        }
-      });
-  }
-
-  atom.setState = fetch;
-
-  return atom;
+    return atom;
+  };
 }
 
-export function useAtom(atom) {
+export function useAtom(atomRef) {
+  const atom = useAtomsState().getAtom(atomRef);
   const [, forceRender] = useReducer((state) => !state, 0);
 
   useLayoutEffect(() => {
@@ -84,10 +129,10 @@ export function useAtom(atom) {
   return [atom.state, atom.setState];
 }
 
-export function useSetAtomState(atom) {
-  return atom.setState;
+export function useSetAtomState(atomRef) {
+  return useAtomsState().getAtom(atomRef).setState;
 }
 
-export function useAtomValue(atom) {
-  return useAtom(atom)[0];
+export function useAtomValue(atomRef) {
+  return useAtom(atomRef)[0];
 }

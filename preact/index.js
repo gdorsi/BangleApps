@@ -16,7 +16,7 @@ import { CustomAppDialog } from "./CustomApp.js";
 import { Confirm, usePrompt } from "./Dialog.js";
 import { EmulatorDialog } from "./Emulator.js";
 import { ReadmeDialog } from "./Readme.js";
-import { Toast, useToast } from "./Toast.js";
+import { Toast, useToast, toastAtom } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { HtmlBlock } from "./HtmlBlock.js";
 
@@ -27,19 +27,20 @@ const appListAtom = createAsyncAtom(
     fetch("apps.json").then((res) =>
       res.ok ? res.json() : Promise.reject(res)
     ),
-  ({ error, init }) => {
+  ({ error, init }, { set }) => {
     if (init) {
-      appListAtom.setState();
+      //triggers the initial fetch, find a better name or maybe a param for this
+      set(appListAtom);
     }
 
     if (error) {
       if (error.message) {
-        toastAtom.setState({
+        set(toastAtom, {
           msg: `${error.toString()} on apps.json`,
           type: "error",
         });
       } else {
-        toastAtom.setState({
+        set(toastAtom, {
           msg: "Error during the fetch of apps.json",
           type: "error",
         });
@@ -370,13 +371,15 @@ const sortInfoAtom = createAsyncAtom(
 
         return appSortInfo;
       }),
-  ({ error, init }) => {
+  ({ error, init }, { set }) => {
     if (init) {
-      sortInfoAtom.setState();
+      set(sortInfoAtom);
     }
 
     if (error) {
-      console.log("No recent.csv - app sort disabled");
+      set(toastAtom, {
+        msg: "No recent.csv - app sort disabled",
+      });
     }
   }
 );

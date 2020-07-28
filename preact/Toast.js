@@ -3,7 +3,7 @@ import { createPortal } from "https://cdn.skypack.dev/preact/compat";
 import { useEffect } from "https://cdn.skypack.dev/preact/hooks";
 import { createStateAtom, useAtom, useSetAtomState } from "./atoms.js";
 
-const toastAtom = createStateAtom();
+export const toastAtom = createStateAtom();
 
 export function useToast() {
   const setState = useSetAtomState(toastAtom);
