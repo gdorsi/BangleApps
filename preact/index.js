@@ -1,66 +1,26 @@
-import { h, render } from "https://cdn.skypack.dev/preact";
-import { createPortal } from "https://cdn.skypack.dev/preact/compat";
-import {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-} from "https://cdn.skypack.dev/preact/hooks";
 import htm from "https://cdn.skypack.dev/htm";
 import marked from "https://cdn.skypack.dev/marked";
+import { h, render } from "https://cdn.skypack.dev/preact";
+import {
+  useMemo,
+  useRef,
+  useState,
+} from "https://cdn.skypack.dev/preact/hooks";
 import {
   createAsyncAtom,
   createStateAtom,
   useAtom,
   useAtomValue,
-  useSetAtomState,
 } from "./atoms.js";
-import {
-  Dialog,
-  Confirm,
-  usePrompt,
-} from "./Dialog.js";
+import { CustomAppDialog } from "./CustomApp.js";
+import { Confirm, usePrompt } from "./Dialog.js";
+import { EmulatorDialog } from "./Emulator.js";
+import { ReadmeDialog } from "./Readme.js";
+import { Toast, useToast } from "./Toast.js";
+import { HttpsBanner } from "./HttpsBanner.js";
+import { HtmlBlock } from "./HtmlBlock.js";
 
-const html = htm.bind(h);
-
-/** GETTERS */
-function getAppGithubURL(app) {
-  let username = "espruino";
-  let githubMatch = window.location.href.match(/\/(\w+)\.github\.io/);
-
-  if (githubMatch) username = githubMatch[1];
-
-  return `https://github.com/${username}/BangleApps/tree/master/apps/${app.id}`;
-}
-
-/** EFFECTS */
-function getEmulatorURL(app) {
-  let file = app.storage.find((f) => f.name.endsWith(".js"));
-  if (!file) {
-    console.error("No entrypoint found for " + app.id);
-    return;
-  }
-  let baseurl = window.location.href;
-  baseurl = baseurl.substr(0, baseurl.lastIndexOf("/"));
-  let url = baseurl + "/apps/" + app.id + "/" + file.url;
-
-  return `/emulator.html?codeurl=${url}`;
-}
-
-const toastAtom = createStateAtom();
-
-function useToast() {
-  const setState = useSetAtomState(toastAtom);
-
-  function show(msg, type) {
-    setState({
-      msg,
-      type,
-    });
-  }
-
-  return { show };
-}
+export const html = htm.bind(h);
 
 const appListAtom = createAsyncAtom(
   () =>
@@ -485,6 +445,15 @@ export function AppList() {
   });
 }
 
+function getAppGithubURL(app) {
+  let username = "espruino";
+  let githubMatch = window.location.href.match(/\/(\w+)\.github\.io/);
+
+  if (githubMatch) username = githubMatch[1];
+
+  return `https://github.com/${username}/BangleApps/tree/master/apps/${app.id}`;
+}
+
 function AppTile({ app, appInstalled }) {
   const installer = useAppInstaller();
 
@@ -518,11 +487,7 @@ function AppTile({ app, appInstalled }) {
         ${versionInfo &&
         html`<${HtmlBlock} as="small" html="(${versionInfo})" />`}
       </p>
-      <${HtmlBlock}
-        class="tile-subtitle"
-        as="p"
-        html="${description}"
-      />
+      <${HtmlBlock} class="tile-subtitle" as="p" html="${description}" />
       ${app.readme
         ? html`<p>
             <a class="c-hand" onClick=${readmePrompt.show}>Read more...</a>
@@ -589,151 +554,6 @@ function AppTile({ app, appInstalled }) {
     ${readmePrompt.isOpen &&
     html` <${ReadmeDialog} app=${app} onClose=${readmePrompt.onClose} /> `}
   </div> `;
-}
-
-function CustomAppDialog({ onClose, onConfirm, app }) {
-  const ref = useRef();
-
-  useEffect(() => {
-    const { contentWindow: iframeWindow } = ref.current;
-
-    function handleMessage(event) {
-      const appFiles = event.data;
-      const customizedApp = JSON.parse(JSON.stringify(app));
-
-      // copy extra keys from appFiles
-      Object.keys(appFiles).forEach((k) => {
-        if (k != "storage") customizedApp[k] = appFiles[k];
-      });
-
-      appFiles.storage.forEach((f) => {
-        customizedApp.storage = customizedApp.storage.filter(
-          (s) => s.name != f.name
-        ); // remove existing item
-        customizedApp.storage.push(f); // add new
-      });
-
-      onConfirm(customizedApp);
-    }
-
-    iframeWindow.addEventListener("message", handleMessage);
-
-    return () => {
-      iframeWindow.removeEventListener("message", handleMessage);
-    };
-  }, []);
-
-  return html`
-    <${Dialog}
-      onClose=${onClose}
-      header=${app.name}
-      body=${html`<iframe
-        src="apps/${app.id}/${app.custom}"
-        style="width:100%;height:100%;border:0px;"
-        ref=${ref}
-      ></iframe>`}
-    />
-  `;
-}
-
-function AppInterfaceDialog({ onClose, app }) {
-  const [loaded, setLoaded] = useState(false);
-  const ref = useRef();
-
-  useEffect(() => {
-    if (!loaded) return;
-
-    const { contentWindow: iframeWindow } = ref.current;
-
-    function handleMessage(event) {
-      const msg = event.data;
-
-      if (msg.type === "eval") {
-        Puck.eval(msg.data, function (result) {
-          iframeWindow.postMessage({
-            type: "evalrsp",
-            data: result,
-            id: msg.id,
-          });
-        });
-      } else if (msg.type === "write") {
-        Puck.write(msg.data, function (result) {
-          iframeWindow.postMessage({
-            type: "writersp",
-            data: result,
-            id: msg.id,
-          });
-        });
-      } else if (msg.type === "readstoragefile") {
-        Comms.readStorageFile(msg.data /*filename*/).then(function (result) {
-          iframeWindow.postMessage({
-            type: "readstoragefilersp",
-            data: result,
-            id: msg.id,
-          });
-        });
-      }
-
-      iframeWindow.postMessage({ type: "init" });
-    }
-
-    iframeWindow.addEventListener("message", handleMessage);
-
-    return () => {
-      iframeWindow.removeEventListener("message", handleMessage);
-    };
-  }, [loaded]);
-
-  return html`
-    <${Dialog}
-      onClose=${onClose}
-      header=${app.name}
-      body=${html`<iframe
-        src="apps/${app.id}/${app.interface}"
-        style="width:100%;height:100%;border:0px;"
-        onLoad=${() => setLoaded(true)}
-        ref=${ref}
-      ></iframe>`}
-    />
-  `;
-}
-
-function EmulatorDialog({ onClose, app }) {
-  return html`
-    <${Dialog}
-      onClose=${onClose}
-      header=${app.name}
-      body=${html`<iframe
-        src=${getEmulatorURL(app)}
-        style="width: 264px;height: 244px;border:0px;"
-      ></iframe>`}
-    />
-  `;
-}
-
-function ReadmeDialog({ onClose, app }) {
-  const [contents, setContents] = useState(null);
-
-  const appPath = `apps/${app.id}/`;
-
-  useEffect(() => {
-    fetch(appPath + app.readme)
-      .then((res) => (res.ok ? res.text() : Promise.reject()))
-      .then((text) => setContents(marked(text, { baseUrl: appPath })))
-      .catch(() => {
-        setContents("Failed to load README.");
-      });
-  }, []);
-
-  if (contents === null) return null;
-
-  return html`
-    <${Dialog}
-      onClose=${onClose}
-      header=${app.name}
-      body=${html`<${HtmlBlock} html=${contents} />`}
-    />
-  `;
 }
 
 function AppButton({
@@ -854,15 +674,6 @@ function Chip({ value, active, text, onClick }) {
   >`;
 }
 
-function HtmlBlock({ as = "span", html, ...props }) {
-  return h(as, {
-    dangerouslySetInnerHTML: {
-      __html: html,
-    },
-    ...props,
-  });
-}
-
 function Panel({ header, body, children, ...props }) {
   return html`
     <div class="panel" ...${props}>
@@ -916,6 +727,7 @@ function About() {
   const installDefaultPrompt = usePrompt(installer.resetToDefaultApps);
   const [pretokenise, setPretokenise] = useAtom(pretokeniseAtom);
 
+  //TODO apploaderlinks
   return html`<div class="hero bg-gray">
       <div class="hero-body">
         <a href="https://banglejs.com" target="_blank"
@@ -1012,57 +824,11 @@ function Header() {
   </header>`;
 }
 
-function HttpsBanner() {
-  if (
-    location.href.startsWith("https") ||
-    location.href.startsWith("http://localhost")
-  )
-    return null;
-
-  return html`<div class="container" style="padding-top:4px">
-    <p>
-      <b>STOP!</b> This page <b>must</b> be served over HTTPS. Please
-      <a
-        href="#https"
-        onClick=${() => {
-          location.href = location.href.replace(`http://`, "https://");
-        }}
-        >reload this page via HTTPS</a
-      >.
-    </p>
-  </div>`;
-}
-
 const tabs = [
   ["library", "Library"],
   ["myapps", "My Apps"],
   ["about", "About"],
 ];
-
-function Toast() {
-  const [state, setState] = useAtom(toastAtom);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setState(null), 5000);
-
-    return () => clearTimeout(timer);
-  }, [state]);
-
-  if (!state) return null;
-
-  const { msg, type } = state;
-  let style = "toast-primary";
-
-  if (type == "success") style = "toast-success";
-  else if (type == "error") style = "toast-error";
-  else if (type == "warning") style = "toast-warning";
-  else if (type !== undefined) console.log("showToast: unknown toast " + type);
-
-  return createPortal(
-    html` <div class="toast ${style}">${msg}</div> `,
-    document.getElementById("toastcontainer")
-  );
-}
 
 export function Main() {
   const [activeTab, setTab] = useState("library");
