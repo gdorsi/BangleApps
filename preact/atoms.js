@@ -1,8 +1,9 @@
 import {
-  useState,
+  useReducer,
   useLayoutEffect,
 } from "https://cdn.skypack.dev/preact/hooks";
 
+//TODO add an optional context provider in order to support SSR
 export function createStateAtom(init, effect) {
   const listeners = new Set();
   let cleanup;
@@ -72,15 +73,15 @@ export function createAsyncAtom(fetcher, effect) {
 }
 
 export function useAtom(atom) {
-  const [state, setLocalState] = useState(atom.state);
+  const [, forceRender] = useReducer((state) => !state, 0);
 
   useLayoutEffect(() => {
-    atom.add(setLocalState);
+    atom.add(forceRender);
 
-    return () => atom.remove(setLocalState);
+    return () => atom.remove(forceRender);
   }, []);
 
-  return [state, atom.setState];
+  return [atom.state, atom.setState];
 }
 
 export function useSetAtomState(atom) {
