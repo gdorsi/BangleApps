@@ -4,109 +4,21 @@ import {
   useState,
   useEffect,
   useRef,
-  useLayoutEffect,
+  useMemo,
 } from "https://cdn.skypack.dev/preact/hooks";
 import htm from "https://cdn.skypack.dev/htm";
+import marked from "https://cdn.skypack.dev/marked";
+import {
+  createAsyncAtom,
+  createStateAtom,
+  useAtom,
+  useAtomValue,
+  useSetAtomState,
+} from "./atoms.js";
 
 const html = htm.bind(h);
 
-function createStateAtom(init, effect) {
-  const listeners = new Set();
-  let cleanup;
-
-  const atom = {
-    add: listeners.add.bind(listeners),
-    remove: listeners.delete.bind(listeners),
-    state: null,
-    setState,
-  };
-
-  function setState(state) {
-    if (typeof state === "function") {
-      state = state(atom.state);
-    }
-
-    if (state === atom.state) return;
-
-    atom.state = state;
-    listeners.forEach((cb) => cb(state));
-
-    effect &&
-      requestAnimationFrame(() => {
-        queueMicrotask(() => {
-          cleanup && cleanup();
-          cleanup = effect(state);
-        });
-      });
-  }
-
-  //triggers the effects on startup
-  setState(init);
-
-  return atom;
-}
-
-function createAsyncAtom(fetcher, effect) {
-  const atom = createStateAtom({ init: true }, effect);
-
-  const setState = atom.setState;
-
-  let promise;
-
-  function fetch(value) {
-    if (typeof value === "function") {
-      value = value(atom.state);
-    }
-
-    const current = (promise = fetcher(value));
-
-    current
-      .then((data) => {
-        if (current === promise) {
-          setState({ data });
-        }
-      })
-      .catch((error) => {
-        if (current === promise) {
-          setState({ data: atom.state.data, error });
-        }
-      });
-  }
-
-  atom.setState = fetch;
-
-  return atom;
-}
-
-function useAtom(atom) {
-  const [state, setLocalState] = useState(atom.state);
-
-  useLayoutEffect(() => {
-    atom.add(setLocalState);
-
-    return () => atom.remove(setLocalState);
-  }, []);
-
-  return [state, atom.setState];
-}
-
-function useSetAtomState(atom) {
-  return atom.setState;
-}
-
-function useAtomValue(atom) {
-  return useAtom(atom)[0];
-}
-
 /** GETTERS */
-//TODO Move to import marked
-function getAppDescription(app) {
-  let appPath = `apps/${app.id}/`;
-  let markedOptions = { baseUrl: appPath };
-
-  return marked(app.description, markedOptions);
-}
-
 function getAppGithubURL(app) {
   let username = "espruino";
   let githubMatch = window.location.href.match(/\/(\w+)\.github\.io/);
@@ -126,7 +38,7 @@ function getFocusableElements(el) {
 function getEmulatorURL(app) {
   let file = app.storage.find((f) => f.name.endsWith(".js"));
   if (!file) {
-    console.error("No entrypoint found for " + appid);
+    console.error("No entrypoint found for " + app.id);
     return;
   }
   let baseurl = window.location.href;
@@ -597,7 +509,7 @@ function useAppInstaller() {
       })
       .catch((err) => {
         Progress.hide({ sticky: true });
-        shotoast.showwToast("App Install failed, " + err, "error");
+        toast.show("App Install failed, " + err, "error");
       });
   }
 
@@ -734,8 +646,14 @@ function AppTile({ app, appInstalled }) {
   const emulatorPrompt = usePrompt();
   const readmePrompt = usePrompt();
 
-  let version = getVersionInfo(app, appInstalled);
-  let versionInfo = version.text;
+  const version = getVersionInfo(app, appInstalled);
+  const versionInfo = version.text;
+
+  const description = useMemo(() => {
+    let appPath = `apps/${app.id}/`;
+
+    return marked(app.description, { baseUrl: appPath });
+  }, [app.description]);
 
   return html`<div class="tile column col-6 col-sm-12 col-xs-12">
     <div class="tile-icon">
@@ -756,7 +674,7 @@ function AppTile({ app, appInstalled }) {
       <${HtmlBlock}
         class="tile-subtitle"
         as="p"
-        html="${getAppDescription(app)}"
+        html="${description}"
       />
       ${app.readme
         ? html`<p>

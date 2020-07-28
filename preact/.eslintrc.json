@@ -1,22 +1,17 @@
 {
     "parserOptions": {
-        "ecmaVersion": 6,
-        "sourceType": "script"
+        "ecmaVersion": 9,
+        "sourceType": "module"
     },
     "rules": {
-        "indent": [
-            "warn",
-            2,
-            {
-                "SwitchCase": 1
-            }
-        ],
+        "indent": "off",
         "no-undef": "warn",
         "no-redeclare": "warn",
         "no-var": "warn",
         "no-unused-vars":"off" // we define stuff to use in other scripts
     },
     "env": {
+        "es6": true,
         "browser": true,
         "node": true
     },
@@ -25,10 +20,10 @@
         "btoa": "writable",
         "Espruino": "writable",
         "htmlElement": "readonly",
+        "Puck": "readonly",
         "escapeHtml": "readonly",
         "htmlToArray": "readonly",
         "heatshrink": "readonly",
-        "Puck": "readonly",
         "Promise": "readonly",
         "Comms": "readonly",
         "Progress": "readonly",
