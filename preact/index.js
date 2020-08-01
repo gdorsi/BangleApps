@@ -19,6 +19,7 @@ import { AppReadmeDialog } from "./AppReadme.js";
 import { Toast, useToast, toastAtom } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { HtmlBlock } from "./HtmlBlock.js";
+import { useProgressBar } from "./ProgressBar.js";
 
 export const html = htm.bind(h);
 
@@ -102,6 +103,7 @@ function useAppInstaller() {
   const installed = useInstalledApps();
   const isConnected = useIsConnected();
   const toast = useToast();
+  const progressBar = useProgressBar();
 
   /// check for dependencies the app needs and install them if required
   function checkDependencies(app) {
@@ -163,14 +165,15 @@ function useAppInstaller() {
         checkDependencies(app)
           .then(() => Comms.uploadApp(app))
           .then((app) => {
-            Progress.hide({ sticky: true });
+            progressBar.hide();
+
             if (app) {
               installed.set((list) => list.concat(app));
             }
             toast.show(app.name + " Uploaded!", "success");
           })
           .catch((err) => {
-            Progress.hide({ sticky: true });
+            progressBar.hide();
             toast.show("Upload failed, " + err, "error");
           });
       })
@@ -246,12 +249,12 @@ function useAppInstaller() {
   function removeAll() {
     Comms.removeAllApps()
       .then(() => {
-        Progress.hide({ sticky: true });
+        progressBar.hide();
         toast.show("All apps removed", "success");
         return installed.loadFromTheDevice();
       })
       .catch((err) => {
-        Progress.hide({ sticky: true });
+        progressBar.hide();
         toast.show("App removal failed, " + err, "error");
       });
   }
@@ -272,15 +275,13 @@ function useAppInstaller() {
 
         if (app === undefined) return resolve();
 
-        Progress.show({
-          title: `${app.name} (${appCount - apps.length}/${appCount})`,
-          sticky: true,
-        });
+
+        progressBar.show(`${app.name} (${appCount - apps.length}/${appCount})`);
 
         checkDependencies(app, "skip_reset")
           .then(() => Comms.uploadApp(app, "skip_reset"))
           .then((appJSON) => {
-            Progress.hide({ sticky: true });
+            progressBar.hide();
 
             if (appJSON) installed.set((list) => list.concat(app));
 
@@ -291,7 +292,7 @@ function useAppInstaller() {
             uploadNextApp();
           })
           .catch(function () {
-            Progress.hide({ sticky: true });
+            progressBar.hide();
             reject();
           });
       }
@@ -307,7 +308,7 @@ function useAppInstaller() {
     httpGet("defaultapps.json")
       .then((json) => {
         return Comms.removeAllApps().then(() => {
-          Progress.hide({ sticky: true });
+          progressBar.hide();
           toast.show(`Existing apps removed.`);
 
           return installMultipleApps(JSON.parse(json));
@@ -317,7 +318,7 @@ function useAppInstaller() {
         return Comms.setTime();
       })
       .catch((err) => {
-        Progress.hide({ sticky: true });
+        progressBar.hide();
         toast.show("App Install failed, " + err, "error");
       });
   }
@@ -839,8 +840,7 @@ const tabs = [
 export function Main() {
   const [activeTab, setTab] = useState("library");
 
-  return html` <${Toast} />
-    <${Header} />
+  return html` <${Header} />
     <${HttpsBanner} />
     <ul class="tab tab-block">
       ${tabs.map(
@@ -858,7 +858,9 @@ export function Main() {
         : activeTab === "myapps"
         ? html`<${InstalledApps} />`
         : html`<${About} />`}
-    </div>`;
+    </div>
+    <${Toast} />
+    <${ProgressBar} />`;
 }
 
 render(html`<${Main} />`, document.querySelector("#root"));
