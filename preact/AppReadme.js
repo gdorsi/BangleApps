@@ -4,7 +4,7 @@ import { useEffect, useState } from "https://cdn.skypack.dev/preact/hooks";
 import { Dialog } from "./Dialog.js";
 import { HtmlBlock } from "./HtmlBlock.js";
 
-export function ReadmeDialog({ onClose, app }) {
+export function AppReadmeDialog({ onClose, app }) {
   const [contents, setContents] = useState(null);
 
   const appPath = `apps/${app.id}/`;

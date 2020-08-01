@@ -15,7 +15,7 @@ import {
 import { CustomAppDialog } from "./CustomApp.js";
 import { Confirm, usePrompt } from "./Dialog.js";
 import { EmulatorDialog } from "./Emulator.js";
-import { ReadmeDialog } from "./Readme.js";
+import { AppReadmeDialog } from "./AppReadme.js";
 import { Toast, useToast, toastAtom } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { HtmlBlock } from "./HtmlBlock.js";
@@ -558,7 +558,7 @@ function AppTile({ app, appInstalled }) {
     ${emulatorPrompt.isOpen &&
     html` <${EmulatorDialog} app=${app} onClose=${emulatorPrompt.onClose} /> `}
     ${readmePrompt.isOpen &&
-    html` <${ReadmeDialog} app=${app} onClose=${readmePrompt.onClose} /> `}
+    html` <${AppReadmeDialog} app=${app} onClose=${readmePrompt.onClose} /> `}
   </div> `;
 }
 
