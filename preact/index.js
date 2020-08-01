@@ -7,9 +7,9 @@ import {
   useState,
 } from "https://cdn.skypack.dev/preact/hooks";
 import {
-  createAsyncAtom,
+  createDataAtom,
   createStateAtom,
-  useAtom,
+  useStateAtom,
   useAtomValue,
 } from "./atoms.js";
 import { CustomAppDialog } from "./CustomApp.js";
@@ -22,25 +22,26 @@ import { HtmlBlock } from "./HtmlBlock.js";
 
 export const html = htm.bind(h);
 
-const appListAtom = createAsyncAtom(
+const appListAtom = createDataAtom(
   () =>
     fetch("apps.json").then((res) =>
       res.ok ? res.json() : Promise.reject(res)
     ),
-  ({ error, init }, { set }) => {
+  ({ error, init, fetchData }, use) => {
+    const toast = use(toastAtom);
+
     if (init) {
-      //triggers the initial fetch, find a better name or maybe a param for this
-      set(appListAtom);
+      fetchData();
     }
 
     if (error) {
       if (error.message) {
-        set(toastAtom, {
+        toast.setState({
           msg: `${error.toString()} on apps.json`,
           type: "error",
         });
       } else {
-        set(toastAtom, {
+        toast.setState({
           msg: "Error during the fetch of apps.json",
           type: "error",
         });
@@ -52,7 +53,7 @@ const appListAtom = createAsyncAtom(
 const installedAtom = createStateAtom(null);
 
 function useInstalledApps() {
-  const [list, set] = useAtom(installedAtom);
+  const [list, set] = useStateAtom(installedAtom);
 
   function loadFromTheDevice() {
     return Comms.getInstalledApps().then((apps) => {
@@ -97,7 +98,7 @@ function useAppsUtils() {
 }
 
 function useAppInstaller() {
-  const list = useAtomValue(appListAtom).data;
+  const { data: appList } = useAtomValue(appListAtom);
   const installed = useInstalledApps();
   const isConnected = useIsConnected();
   const toast = useToast();
@@ -121,7 +122,7 @@ function useAppInstaller() {
         return;
       }
 
-      let foundApps = list.filter((app) => app.type == dependency);
+      let foundApps = appList.filter((app) => app.type == dependency);
 
       if (!foundApps.length)
         throw new Error(
@@ -354,7 +355,7 @@ const pretokeniseAtom = createStateAtom(
 const activeCategoryAtom = createStateAtom("");
 const sortAtom = createStateAtom("");
 const searchAtom = createStateAtom("");
-const sortInfoAtom = createAsyncAtom(
+const sortInfoAtom = createDataAtom(
   () =>
     fetch("appdates.csv")
       .then((res) => (res.ok ? res.text() : Promise.reject(res)))
@@ -371,13 +372,15 @@ const sortInfoAtom = createAsyncAtom(
 
         return appSortInfo;
       }),
-  ({ error, init }, { set }) => {
+  ({ error, init, fetchData }, use) => {
+    const toast = use(toastAtom);
+
     if (init) {
-      set(sortInfoAtom);
+      fetchData();
     }
 
     if (error) {
-      set(toastAtom, {
+      toast.setState({
         msg: "No recent.csv - app sort disabled",
       });
     }
@@ -385,10 +388,10 @@ const sortInfoAtom = createAsyncAtom(
 );
 
 const useFilters = () => {
-  const [active, setActive] = useAtom(activeCategoryAtom);
-  const [sort, setSort] = useAtom(sortAtom);
-  const sortInfo = useAtomValue(sortInfoAtom).data;
-  const [search, setSearch] = useAtom(searchAtom);
+  const [active, setActive] = useStateAtom(activeCategoryAtom);
+  const [sort, setSort] = useStateAtom(sortAtom);
+  const { data: sortInfo } = useAtomValue(sortInfoAtom);
+  const [search, setSearch] = useStateAtom(searchAtom);
 
   return {
     active,
@@ -402,7 +405,7 @@ const useFilters = () => {
 };
 
 export function AppList() {
-  const appList = useAtomValue(appListAtom).data;
+  const { data: appList } = useAtomValue(appListAtom);
   const installedApps = useInstalledApps();
   const filters = useFilters();
 
@@ -696,7 +699,7 @@ function AppsLibrary() {
 }
 
 function InstalledApps() {
-  const appList = useAtomValue(appListAtom).data;
+  const { data: appList } = useAtomValue(appListAtom);
   const installedApps = useInstalledApps();
 
   const list =
@@ -728,7 +731,7 @@ function About() {
 
   const removeAllPrompt = usePrompt(installer.removeAll);
   const installDefaultPrompt = usePrompt(installer.resetToDefaultApps);
-  const [pretokenise, setPretokenise] = useAtom(pretokeniseAtom);
+  const [pretokenise, setPretokenise] = useStateAtom(pretokeniseAtom);
 
   //TODO apploaderlinks
   return html`<div class="hero bg-gray">

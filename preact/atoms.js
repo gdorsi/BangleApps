@@ -10,38 +10,24 @@ import {
 function makeAtomsState() {
   const atomsMap = new WeakMap();
 
-  function getAtom(atomRef) {
+  function use(atomRef) {
     let atom = atomsMap.get(atomRef);
 
     if (!atom) {
-      atom = atomRef(atomsState);
+      atom = atomRef(use);
       atomsMap.set(atomRef, atom);
     }
 
     return atom;
   }
 
-  const atomsState = {
-    getAtom,
-    get(atomRef) {
-      return getAtom(atomRef).state;
-    },
-    set(atomRef, state) {
-      getAtom(atomRef).setState(state);
-    },
-  };
-
-  return atomsState;
+  return use;
 }
 
 const ctx = createContext(makeAtomsState());
 
 export function AtomsState({ children }) {
   return h(ctx.Provider, { value: useMemo(makeAtomsState, []) }, children);
-}
-
-export function useAtomsState() {
-  return useContext(ctx);
 }
 
 export function createStateAtom(init, effect) {
@@ -82,15 +68,13 @@ export function createStateAtom(init, effect) {
   };
 }
 
-export function createAsyncAtom(fetcher, effect) {
+export function createDataAtom(fetcher, effect) {
   return function (atomsState) {
-    const atom = createStateAtom({ init: true }, effect)(atomsState);
-
-    const setState = atom.setState;
+    const atom = createStateAtom({ init: true, fetchData, mutate }, effect)(atomsState);
 
     let promise;
 
-    function fetch(value) {
+    function fetchData(value) {
       if (typeof value === "function") {
         value = value(atom.state);
       }
@@ -100,39 +84,54 @@ export function createAsyncAtom(fetcher, effect) {
       current
         .then((data) => {
           if (current === promise) {
-            setState({ data });
+            atom.setState({ data, fetchData, mutate });
           }
         })
         .catch((error) => {
           if (current === promise) {
-            setState({ data: atom.state.data, error });
+            atom.setState({ data: atom.state.data, error, fetchData, mutate });
           }
         });
     }
 
-    atom.setState = fetch;
+    function mutate(data) {
+      atom.setState({ data, fetchData, mutate });
+    }
+
+    atom.fetch = fetchData;
+    atom.mutate = mutate;
 
     return atom;
   };
 }
 
-export function useAtom(atomRef) {
-  const atom = useAtomsState().getAtom(atomRef);
+export function useAtom(atomRef, subscribe) {
+  const atom = useContext(ctx)(atomRef);
+
   const [, forceRender] = useReducer((state) => !state, 0);
 
   useLayoutEffect(() => {
+    if (!subscribe) return;
+
     atom.add(forceRender);
 
     return () => atom.remove(forceRender);
   }, []);
 
+
+  return atom;
+}
+
+export function useStateAtom(atomRef) {
+  const atom = useAtom(atomRef, true);
+
   return [atom.state, atom.setState];
 }
 
-export function useSetAtomState(atomRef) {
-  return useAtomsState().getAtom(atomRef).setState;
+export function useAtomSetState(atomRef) {
+  return useAtom(atomRef).setState;
 }
 
 export function useAtomValue(atomRef) {
-  return useAtom(atomRef)[0];
+  return useAtom(atomRef, true).state;
 }

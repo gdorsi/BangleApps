@@ -1,12 +1,12 @@
 import { html } from "./index.js";
 import { createPortal } from "https://cdn.skypack.dev/preact/compat";
 import { useEffect } from "https://cdn.skypack.dev/preact/hooks";
-import { createStateAtom, useAtom, useSetAtomState } from "./atoms.js";
+import { createStateAtom, useStateAtom, useAtomSetState } from "./atoms.js";
 
 export const toastAtom = createStateAtom();
 
 export function useToast() {
-  const setState = useSetAtomState(toastAtom);
+  const setState = useAtomSetState(toastAtom);
 
   function show(msg, type) {
     setState({
@@ -19,7 +19,7 @@ export function useToast() {
 }
 
 export function Toast() {
-  const [state, setState] = useAtom(toastAtom);
+  const [state, setState] = useStateAtom(toastAtom);
 
   useEffect(() => {
     const timer = setTimeout(() => setState(null), 5000);
