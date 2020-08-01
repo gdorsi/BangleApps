@@ -9,14 +9,22 @@ export function useProgressBar() {
   const setState = useAtomSetState(progressBarAtom);
 
   function show(text) {
-    setState({ text, visible: true });
+    setState((state) => ({ ...state, text, visible: true }));
   }
 
   function hide() {
     setState({ visible: false });
   }
 
-  return { show, hide };
+  function setRange(min, max) {
+    setState((state) => ({ ...state, range: [min, max], percent: 0 }));
+  }
+
+  function setPercent(percent) {
+    setState((state) => ({ ...state, percent }));
+  }
+
+  return { show, hide, setRange, setPercent };
 }
 
 export function ProgressBar() {
@@ -28,11 +36,11 @@ export function ProgressBar() {
     /// Add progress handler so we get nice uploads
     Puck.writeProgress = function (charsSent, charsTotal) {
       if (charsSent === undefined) {
-        setState({ visible: false });
+        //setState({ visible: false });
         return;
       }
 
-      const percent = Math.round((charsSent * 100) / charsTotal);
+      const percent = Math.round((charsSent) / charsTotal);
 
       setState((state) => ({ ...state, percent }));
     };
@@ -44,20 +52,24 @@ export function ProgressBar() {
 
   if (state.visible === false) return null;
 
-  return createPortal(
-    html`<div class="toast">
-      ${state.text ? `<div>${state.text}</div>` : ``}
-      <div class="bar bar-sm">
-        <div
-          class="bar-item"
-          role="progressbar"
-          style="width:${percent}%;"
-          aria-valuenow="${percent}"
-          aria-valuemin="0"
-          aria-valuemax="100"
-        ></div>
-      </div>
-    </div>`,
-    document.getElementById("toastcontainer")
-  );
+  let percent = state.percent || 0;
+
+  if (state.range) {
+    const [min, max] = state.range;
+    percent = min + (max - min) * percent;
+  }
+
+  return html`<div class="toast">
+    ${state.text ? html`<div>${state.text}</div>` : ``}
+    <div class="bar bar-sm">
+      <div
+        class="bar-item"
+        role="progressbar"
+        style="width:${percent * 100}%;"
+        aria-valuenow="${percent * 100}"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      ></div>
+    </div>
+  </div>`;
 }

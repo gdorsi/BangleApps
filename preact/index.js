@@ -19,7 +19,8 @@ import { AppReadmeDialog } from "./AppReadme.js";
 import { Toast, useToast, toastAtom } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { HtmlBlock } from "./HtmlBlock.js";
-import { useProgressBar } from "./ProgressBar.js";
+import { useProgressBar, ProgressBar } from "./ProgressBar.js";
+import { useComms } from "./useComms.js";
 
 export const html = htm.bind(h);
 
@@ -55,12 +56,16 @@ const installedAtom = createStateAtom(null);
 
 function useInstalledApps() {
   const [list, set] = useStateAtom(installedAtom);
+  const Comms = useComms();
+  const toast = useToast();
 
   function loadFromTheDevice() {
     return Comms.getInstalledApps().then((apps) => {
       set(apps);
 
       return apps;
+    }).catch(err => {
+      toast.show('Connection failed ', err);
     });
   }
 
@@ -82,6 +87,7 @@ function useIsConnected() {
 }
 
 function useAppsUtils() {
+  const Comms = useComms();
   const toast = useToast();
 
   function setTime() {
@@ -104,6 +110,7 @@ function useAppInstaller() {
   const isConnected = useIsConnected();
   const toast = useToast();
   const progressBar = useProgressBar();
+  const Comms = useComms();
 
   /// check for dependencies the app needs and install them if required
   function checkDependencies(app) {
@@ -260,7 +267,7 @@ function useAppInstaller() {
   }
 
   function installMultipleApps(appIds) {
-    let apps = appIds.map((appid) => list.find((app) => app.id == appid));
+    let apps = appIds.map((appid) => appList.find((app) => app.id == appid));
 
     if (apps.some((x) => x === undefined))
       return Promise.reject("Not all apps found");
@@ -274,7 +281,6 @@ function useAppInstaller() {
         let app = apps.shift();
 
         if (app === undefined) return resolve();
-
 
         progressBar.show(`${app.name} (${appCount - apps.length}/${appCount})`);
 
@@ -333,22 +339,17 @@ function useAppInstaller() {
   };
 }
 
-const pretokeniseAtom = createStateAtom(
+export const pretokeniseAtom = createStateAtom(
   () => {
     const saved = localStorage.getItem("pretokenise");
-
+  
     if (saved) {
       return JSON.parse(saved);
     }
-
+  
     return true;
   },
   (pretokenise) => {
-    //This is required by Comm.uploadApp
-    window.SETTINGS = {
-      pretokenise,
-    };
-
     localStorage.setItem("pretokenise", JSON.stringify(pretokenise));
   }
 );
@@ -851,16 +852,17 @@ export function Main() {
         `
       )}
     </ul>
-    <div class="container" id="toastcontainer"></div>
+    <div class="container" id="toastcontainer">
+      <${Toast} />
+      <${ProgressBar} />
+    </div>
     <div class="container bangle-tab">
       ${activeTab === "library"
         ? html`<${AppsLibrary} />`
         : activeTab === "myapps"
         ? html`<${InstalledApps} />`
         : html`<${About} />`}
-    </div>
-    <${Toast} />
-    <${ProgressBar} />`;
+    </div>`;
 }
 
 render(html`<${Main} />`, document.querySelector("#root"));

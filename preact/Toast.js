@@ -35,8 +35,5 @@ export function Toast() {
     console.log("showToast: unknown toast " + type);
   }
 
-  return createPortal(
-    html`<div class="toast toast-${type}">${msg}</div>`,
-    document.getElementById("toastcontainer")
-  );
+  return html`<div class="toast toast-${type}">${msg}</div>`;
 }
