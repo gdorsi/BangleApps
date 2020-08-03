@@ -62,7 +62,7 @@ export function useComms() {
   }
 
   async function uploadApp(app, skipReset) {
-    progressBar.show(`Uploading ${app.name}`);
+    progressBar.show(`Getting info about ${app.name}`);
 
     //TODO remove this globals
     const fileContents = await AppInfo.getFiles(app, {
@@ -94,6 +94,9 @@ export function useComms() {
 
     await write(`\x10E.showMessage('Uploading\\n${app.id}...')\n`);
 
+
+    progressBar.show(`Uploading ${app.name}`);
+
     // Upload each file one at a time
     while (fileContents.length > 0) {
       let f = fileContents.shift();
@@ -121,10 +124,10 @@ export function useComms() {
       }
     }
 
+    progressBar.hide();
+
     // No files left - print 'reboot' message
     await write(`\x10E.showMessage('Hold BTN3\\nto reload')\n`);
-
-    progressBar.hide();
 
     return appInfo;
   }

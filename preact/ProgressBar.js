@@ -1,5 +1,4 @@
 import { html } from "./index.js";
-import { createPortal } from "https://cdn.skypack.dev/preact/compat";
 import { useEffect } from "https://cdn.skypack.dev/preact/hooks";
 import { createStateAtom, useStateAtom, useAtomSetState } from "./atoms.js";
 
@@ -36,13 +35,13 @@ export function ProgressBar() {
     /// Add progress handler so we get nice uploads
     Puck.writeProgress = function (charsSent, charsTotal) {
       if (charsSent === undefined) {
-        //setState({ visible: false });
         return;
       }
 
-      const percent = Math.round((charsSent) / charsTotal);
-
-      setState((state) => ({ ...state, percent }));
+      setState((state) => ({
+        ...state,
+        percent: charsSent / charsTotal,
+      }));
     };
 
     return () => {

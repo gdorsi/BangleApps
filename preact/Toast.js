@@ -1,5 +1,4 @@
 import { html } from "./index.js";
-import { createPortal } from "https://cdn.skypack.dev/preact/compat";
 import { useEffect } from "https://cdn.skypack.dev/preact/hooks";
 import { createStateAtom, useStateAtom, useAtomSetState } from "./atoms.js";
 

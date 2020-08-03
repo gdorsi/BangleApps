@@ -100,7 +100,7 @@ export function Dialog({ header, body, footer, onClose }) {
           aria-label="Close"
           onClick=${handleClose}
         ></a>
-        <div class="modal-container">
+        <div class="modal-container" style="height: 100%">
           <div class="modal-header">
             <a
               href="#close"
@@ -110,7 +110,7 @@ export function Dialog({ header, body, footer, onClose }) {
             ></a>
             ${header}
           </div>
-          <div class="modal-body">
+          <div class="modal-body" style="height: 100%;overflow-y: inherit;">
             ${body}
           </div>
           ${footer &&
