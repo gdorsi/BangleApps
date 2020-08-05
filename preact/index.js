@@ -16,6 +16,7 @@ import { CustomAppDialog } from "./CustomApp.js";
 import { Confirm, usePrompt } from "./Dialog.js";
 import { EmulatorDialog } from "./Emulator.js";
 import { AppReadmeDialog } from "./AppReadme.js";
+import { AppInterfaceDialog } from "./AppInterface.js";
 import { Toast, useToast, toastAtom } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { HtmlBlock } from "./HtmlBlock.js";
@@ -55,18 +56,21 @@ const appListAtom = createDataAtom(
 const installedAtom = createStateAtom(null);
 
 function useInstalledApps() {
+  //TODO use watchConnectionChange
   const [list, set] = useStateAtom(installedAtom);
   const Comms = useComms();
   const toast = useToast();
 
   function loadFromTheDevice() {
-    return Comms.getInstalledApps().then((apps) => {
-      set(apps);
+    return Comms.getInstalledApps()
+      .then((apps) => {
+        set(apps);
 
-      return apps;
-    }).catch(err => {
-      toast.show('Connection failed ', err);
-    });
+        return apps;
+      })
+      .catch((err) => {
+        toast.show("Connection failed ", err);
+      });
   }
 
   function disconnect() {
@@ -311,7 +315,10 @@ function useAppInstaller() {
   }
 
   function resetToDefaultApps() {
-    httpGet("defaultapps.json")
+    fetch("defaultapps.json")
+      .then((res) =>
+        res.ok ? res.json() : Promise.reject(`Could not fetch the default apps`)
+      )
       .then((json) => {
         return Comms.removeAllApps().then(() => {
           progressBar.hide();
@@ -342,11 +349,11 @@ function useAppInstaller() {
 export const pretokeniseAtom = createStateAtom(
   () => {
     const saved = localStorage.getItem("pretokenise");
-  
+
     if (saved) {
       return JSON.parse(saved);
     }
-  
+
     return true;
   },
   (pretokenise) => {
@@ -429,6 +436,18 @@ export function AppList() {
     );
   }
 
+  function appSorter(a, b) {
+    if (a.unknown) return 1;
+    if (b.unknown) return -1;
+
+    const sa = 0 | a.sortorder;
+    const sb = 0 | b.sortorder;
+
+    if (sa !== sb) return sa - sb;
+
+    return a.name == b.name ? 0 : a.name < b.name ? -1 : 1;
+  }
+
   visibleApps.sort(appSorter);
 
   if (filters.sort && filters.sortInfo) {
@@ -462,6 +481,17 @@ function getAppGithubURL(app) {
   return `https://github.com/${username}/BangleApps/tree/master/apps/${app.id}`;
 }
 
+/* Given 2 JSON structures (1st from apps.json, 2nd from an installed app)
+work out what to display re: versions and if we can update */
+function getCanUpdate(appListing, appInstalled) {
+  //TODO Implement semver compare
+  if (appInstalled && appListing.version != appInstalled.version) {
+    return true;
+  }
+
+  return false;
+}
+
 function AppTile({ app, appInstalled }) {
   const installer = useAppInstaller();
 
@@ -470,8 +500,8 @@ function AppTile({ app, appInstalled }) {
   const emulatorPrompt = usePrompt();
   const readmePrompt = usePrompt();
 
-  const version = getVersionInfo(app, appInstalled);
-  const versionInfo = version.text;
+  //TODO Implement changelog dialog
+  const canUpdate = getCanUpdate(app, appInstalled);
 
   const description = useMemo(() => {
     let appPath = `apps/${app.id}/`;
@@ -492,8 +522,12 @@ function AppTile({ app, appInstalled }) {
     <div class="tile-content">
       <p class="tile-title text-bold">
         ${app.name}
-        ${versionInfo &&
-        html`<${HtmlBlock} as="small" html="(${versionInfo})" />`}
+        <small>
+          ${canUpdate
+            ? html`v${appInstalled.version || "Unknown version"}, latest
+              v${app.version}`
+            : html`v${app.version}`}
+        </small>
       </p>
       <${HtmlBlock} class="tile-subtitle" as="p" html="${description}" />
       ${app.readme
@@ -519,7 +553,7 @@ function AppTile({ app, appInstalled }) {
         iconName="icon-share"
         onClick=${emulatorPrompt.show}
       />`}
-      ${version.canUpdate &&
+      ${canUpdate &&
       html`<${AppButton}
         title="Update App"
         iconName="icon-refresh"

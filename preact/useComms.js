@@ -7,6 +7,23 @@ console.log("=============================================");
 console.log("Type 'Puck.debug=3' for full BLE debug info");
 console.log("=============================================");
 
+// simple glob to regex conversion, only supports "*" and "?" wildcards
+function globToRegex(pattern) {
+  const ESCAPE = '.*+-?^${}()|[]\\';
+  const regex = pattern.replace(/./g, c => {
+    switch (c) {
+      case '?': return '.';
+      case '*': return '.*';
+      default: return ESCAPE.includes(c) ? ('\\' + c) : c;
+    }
+  });
+  return new RegExp('^'+regex+'$');
+}
+
+function toJS(txt) {
+  return JSON.stringify(txt);
+}
+
 function timer(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
@@ -66,7 +83,8 @@ export function useComms() {
 
     //TODO remove this globals
     const fileContents = await AppInfo.getFiles(app, {
-      fileGetter: httpGet,
+      fileGetter: (url) =>
+        fetch(url).then((res) => (res.ok ? res.text() : Promise.reject())),
       settings: {
         pretokenise: pretokenise.state,
       },
@@ -94,7 +112,6 @@ export function useComms() {
 
     await write(`\x10E.showMessage('Uploading\\n${app.id}...')\n`);
 
-
     progressBar.show(`Uploading ${app.name}`);
 
     // Upload each file one at a time
@@ -119,7 +136,7 @@ export function useComms() {
         if (!res || res.trim() != "OK") {
           progressBar.hide();
 
-          return Promise.reject("Unexpected response " + (result || ""));
+          return Promise.reject("Unexpected response " + (res || ""));
         }
       }
     }
@@ -253,7 +270,7 @@ export function useComms() {
     connection.close();
   }
 
-  function watchConnectionChange() {
+  function watchConnectionChange(cb) {
     let connected = Puck.isConnected();
 
     //TODO Switch to an event listener when Puck will support it
@@ -287,12 +304,10 @@ export function useComms() {
     });
   }
 
-  async function readFile() {
+  async function readFile(file) {
     await write(`\x03`);
 
     return new Promise((resolve, reject) => {
-      if (result === null) return reject("");
-
       //encode name to avoid serialization issue due to octal sequence
       const name = encodeURIComponent(file);
 

@@ -19,24 +19,10 @@
     "globals": {
         "btoa": "writable",
         "Espruino": "writable",
-        "htmlElement": "readonly",
         "Puck": "readonly",
-        "escapeHtml": "readonly",
-        "htmlToArray": "readonly",
         "heatshrink": "readonly",
         "Promise": "readonly",
-        "Comms": "readonly",
-        "Progress": "readonly",
-        "showToast": "readonly",
-        "showPrompt": "readonly",
-        "httpGet": "readonly",
-        "getVersionInfo": "readonly",
         "AppInfo": "readonly",
-        "marked": "readonly",
-        "appSorter": "readonly",
-        "Uint8Array" : "readonly",
-        "SETTINGS" : "readonly",
-        "globToRegex" : "readonly",
-        "toJS" : "readonly"
+        "Uint8Array" : "readonly"
      }
 }

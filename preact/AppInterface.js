@@ -1,10 +1,12 @@
 import { html } from "./index.js";
-import { useEffect, useRef } from "https://cdn.skypack.dev/preact/hooks";
+import { useEffect, useRef, useState } from "https://cdn.skypack.dev/preact/hooks";
 import { Dialog } from "./Dialog.js";
+import { useComms } from "./useComms.js";
 
 export function AppInterfaceDialog({ onClose, app }) {
   const [loaded, setLoaded] = useState(false);
   const ref = useRef();
+  const Comms = useComms();
 
   useEffect(() => {
     if (!loaded) return;
