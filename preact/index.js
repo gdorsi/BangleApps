@@ -22,6 +22,7 @@ import { HttpsBanner } from "./HttpsBanner.js";
 import { HtmlBlock } from "./HtmlBlock.js";
 import { useProgressBar, ProgressBar } from "./ProgressBar.js";
 import { useComms } from "./useComms.js";
+import { InstallPrompt } from "./InstallPrompt.js";
 
 export const html = htm.bind(h);
 
@@ -896,7 +897,8 @@ export function Main() {
         : activeTab === "myapps"
         ? html`<${InstalledApps} />`
         : html`<${About} />`}
-    </div>`;
+    </div>
+    <${InstallPrompt} />`;
 }
 
 render(html`<${Main} />`, document.querySelector("#root"));
