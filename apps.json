@@ -2,7 +2,7 @@
   { "id": "boot",
     "name": "Bootloader",
     "icon": "bootloader.png",
-    "version":"0.19",
+    "version":"0.20",
     "description": "This is needed by Bangle.js to automatically load the clock, menu, widgets and settings",
     "tags": "tool,system",
     "type":"bootloader",
@@ -80,7 +80,7 @@
     "name": "Notifications (default)",
     "shortName":"Notifications",
     "icon": "notify.png",
-    "version":"0.02",
+    "version":"0.03",
     "description": "A handler for displaying notifications that displays them in a bar at the top of the screen",
     "tags": "widget",
     "type": "notify",
@@ -93,7 +93,7 @@
     "name": "Fullscreen Notifications",
     "shortName":"Notifications",
     "icon": "notify.png",
-    "version":"0.03",
+    "version":"0.04",
     "description": "A handler for displaying notifications that displays them fullscreen. This may not fully restore the screen after on some apps. See `Notifications (default)` for more information about the notifications library.",
     "tags": "widget",
     "type": "notify",
@@ -121,7 +121,7 @@
   { "id": "gbridge",
     "name": "Gadgetbridge",
     "icon": "app.png",
-    "version":"0.16",
+    "version":"0.17",
     "description": "The default notification handler for Gadgetbridge notifications from Android",
     "tags": "tool,system,android,widget",
     "type":"widget",
@@ -152,7 +152,7 @@
   { "id": "setting",
     "name": "Settings",
     "icon": "settings.png",
-    "version":"0.20",
+    "version":"0.21",
     "description": "A menu for setting up Bangle.js",
     "tags": "tool,system",
     "readme": "README.md",
@@ -454,6 +454,24 @@
     ],
     "data": [
       {"name":"widbatpc.json"}
+    ]
+  },
+  { "id": "widbatwarn",
+    "name": "Battery Warning",
+    "shortName": "Battery Warning",
+    "icon": "widget.png",
+    "readme": "README.md",
+    "version":"0.01",
+    "description": "Show a warning when the battery runs low.",
+    "tags": "tool,battery",
+    "type":"widget",
+    "dependencies": { "notify":"type" },
+    "storage": [
+      {"name":"widbatwarn.wid.js","url":"widget.js"},
+      {"name":"widbatwarn.settings.js","url":"settings.js"}
+    ],
+    "data": [
+      {"name":"widbatwarn.json"}
     ]
   },
   { "id": "widbt",
@@ -1677,7 +1695,7 @@
     "id": "simpletimer",
     "name": "Timer",
     "icon": "app.png",
-    "version": "0.04",
+    "version": "0.05",
     "description": "Simple timer, useful when playing board games or cooking",
     "tags": "timer",
     "readme": "README.md",
