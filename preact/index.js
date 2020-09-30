@@ -537,7 +537,7 @@ function AppTile({ app, appInstalled }) {
           </p>`
         : ""}
       <a href="${getAppGithubURL(app)}" target="_blank" class="link-github"
-        ><img src="img/github-icon-sml.png" alt="See the code on GitHub"
+        ><img src="core/img/github-icon-sml.png" alt="See the code on GitHub"
       /></a>
     </div>
     <div class="tile-action">
