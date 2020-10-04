@@ -118,22 +118,24 @@ function useAppInstaller() {
   const Comms = useComms();
 
   /// check for dependencies the app needs and install them if required
-  function checkDependencies(app) {
-    let promise = Promise.resolve();
+  async function installDependencies(app) {
+    if (!app.dependencies) return;
 
-    if (!app.dependencies) return promise;
+    const dependenciesToInstall = new Set();
 
-    Object.entries(app.dependencies).forEach(([dependency, kind]) => {
+    for (let dependency in app.dependencies) {
+      const kind = app.dependencies[dependency];
+
       if (kind !== "type")
         throw new Error("Only supporting dependencies on app types right now");
 
-      console.log(`Searching for dependency on app type '${dependency}'`);
+      onsole.log(`Searching for dependency on app type '${dependency}'`);
 
       let found = installed.list.find((app) => app.type == dependency);
 
       if (found) {
         console.log(`Found dependency in installed app '${found.id}'`);
-        return;
+        continue;
       }
 
       let foundApps = appList.filter((app) => app.type == dependency);
@@ -148,50 +150,56 @@ function useAppInstaller() {
           .map((f) => `'${f.id}'`)
           .join("/")} implement '${dependency}'`
       );
+
       found = foundApps[0]; // choose first app in list
-      console.log(`Dependency not installed. Installing app id '${found.id}'`);
 
-      promise = promise.then(() => {
-        console.log(`Install dependency '${dependency}':'${found.id}'`);
-        return Comms.uploadApp(found).then((app) => {
-          if (app) installed.set((list) => list.concat(app));
-        });
-      });
-    });
+      dependenciesToInstall.add(found);
 
-    return promise;
+      console.log(
+        `Dependency "${dependency}" not installed. Installing app id '${found.id}'`
+      );
+    }
+
+    for (let dependencyToInstall of dependenciesToInstall) {
+      const uploadedApp = await Comms.uploadApp(dependencyToInstall);
+
+      if (uploadedApp) installed.set((list) => list.concat(uploadedApp));
+    }
   }
 
-  function install(app) {
+  async function install(app) {
+    let list = installed.list;
+
     //TODO Move the connection check outside
-    let promise = isConnected
-      ? Promise.resolve(installed.list)
-      : installed.loadFromTheDevice();
-
-    return promise
-      .then((list) => {
-        if (list.some((i) => i.id === app.id)) {
-          return update(app);
-        }
-
-        checkDependencies(app)
-          .then(() => Comms.uploadApp(app))
-          .then((app) => {
-            progressBar.hide();
-
-            if (app) {
-              installed.set((list) => list.concat(app));
-            }
-            toast.show(app.name + " Uploaded!", "success");
-          })
-          .catch((err) => {
-            progressBar.hide();
-            toast.show("Upload failed, " + err, "error");
-          });
-      })
-      .catch((err) => {
+    if (!isConnected) {
+      try {
+        list = await installed.loadFromTheDevice();
+      } catch (err) {
         toast.show("Device connection failed, " + err, "error");
-      });
+        return;
+      }
+    }
+
+    if (list.some((i) => i.id === app.id)) {
+      return update(app);
+    }
+
+    await installDependencies(app);
+
+    try {
+      const installedApp = await Comms.uploadApp(app);
+
+
+      if (installedApp) {
+        installed.set((list) => list.concat(installedApp));
+      }
+
+      toast.show(installedApp.name + " Uploaded!", "success");
+    } catch (err) {
+      toast.show("Upload failed, " + err, "error");
+    }
+
+    progressBar.hide();
   }
 
   function update(app) {
@@ -231,7 +239,7 @@ function useAppInstaller() {
 
         installed.set((list) => list.filter((a) => a.id != app.id));
 
-        return checkDependencies(app);
+        return installDependencies(app);
       })
       .then(() => Comms.uploadApp(app))
       .then(
@@ -289,7 +297,7 @@ function useAppInstaller() {
 
         progressBar.show(`${app.name} (${appCount - apps.length}/${appCount})`);
 
-        checkDependencies(app, "skip_reset")
+        installDependencies(app, "skip_reset")
           .then(() => Comms.uploadApp(app, "skip_reset"))
           .then((appJSON) => {
             progressBar.hide();
