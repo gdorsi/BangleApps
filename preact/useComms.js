@@ -1,6 +1,6 @@
 import { useProgressBar } from "./ProgressBar.js";
 import { useAtom } from "./atoms.js";
-import { pretokeniseAtom } from "./index.js";
+import { pretokeniseAtom } from "./useAppsUtils.js";
 
 //Puck.debug=3;
 console.log("=============================================");
