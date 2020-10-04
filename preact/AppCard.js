@@ -30,7 +30,7 @@ function getCanUpdate(appListing, appInstalled) {
   return false;
 }
 
-export function AppTile({ app, appInstalled }) {
+export function AppCard({ app, appInstalled }) {
   const installer = useAppInstaller();
 
   const customAppPrompt = usePrompt(installer.install);

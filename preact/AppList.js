@@ -2,7 +2,7 @@ import { useInstalledApps } from "./useInstalledApps.js";
 import { useFilters } from "./useFilters.js";
 import { useAppList } from "./useAppList.js";
 import { html } from "./index.js";
-import { AppTile } from "./AppTile.js";
+import { AppCard } from "./AppCard.js";
 
 export function AppList() {
   const { data: appList } = useAppList();
@@ -57,7 +57,7 @@ export function AppList() {
   return visibleApps.map((app) => {
     let appInstalled = installedApps.list && installedApps.list.find((a) => a.id == app.id);
 
-    return html`<${AppTile}
+    return html`<${AppCard}
       key=${app.id}
       app=${app}
       appInstalled=${appInstalled}

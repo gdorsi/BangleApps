@@ -1,6 +1,6 @@
 import { useInstalledApps } from "./useInstalledApps.js";
 import { useAppList } from "./useAppList.js";
-import { AppTile } from "./AppTile.js";
+import { AppCard } from "./AppCard.js";
 import { Panel } from "./Panel.js";
 import { html } from "./index.js";
 
@@ -12,7 +12,7 @@ export function InstalledApps() {
     installedApps.list.map((appInstalled) => {
       let app = appList.find((a) => a.id == appInstalled.id);
 
-      return html`<${AppTile}
+      return html`<${AppCard}
         key=${app.id}
         app=${app}
         appInstalled=${appInstalled}
