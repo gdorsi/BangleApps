@@ -9,8 +9,7 @@ export function AppList() {
   const installedApps = useInstalledApps();
   const filters = useFilters();
 
-  if (!appList)
-    return;
+  if (!appList) return;
 
   let visibleApps = appList.slice(); // clone so we don't mess with the original
 
@@ -22,22 +21,20 @@ export function AppList() {
 
   if (filters.search) {
     visibleApps = visibleApps.filter(
-      (app) => app.name.toLowerCase().includes(filters.search) ||
+      (app) =>
+        app.name.toLowerCase().includes(filters.search) ||
         app.tags.includes(filters.search)
     );
   }
 
   function appSorter(a, b) {
-    if (a.unknown)
-      return 1;
-    if (b.unknown)
-      return -1;
+    if (a.unknown) return 1;
+    if (b.unknown) return -1;
 
     const sa = 0 | a.sortorder;
     const sb = 0 | b.sortorder;
 
-    if (sa !== sb)
-      return sa - sb;
+    if (sa !== sb) return sa - sb;
 
     return a.name == b.name ? 0 : a.name < b.name ? -1 : 1;
   }
@@ -47,20 +44,23 @@ export function AppList() {
   if (filters.sort && filters.sortInfo) {
     if (filters.sort == "created" || filters.sort == "modified") {
       visibleApps = visibleApps.sort(
-        (a, b) => filters.sortInfo[b.id][filters.sort] -
+        (a, b) =>
+          filters.sortInfo[b.id][filters.sort] -
           filters.sortInfo[a.id][filters.sort]
       );
-    } else
-      throw new Error("Unknown sort type " + filters.sort);
+    } else throw new Error("Unknown sort type " + filters.sort);
   }
 
-  return visibleApps.map((app) => {
-    let appInstalled = installedApps.list && installedApps.list.find((a) => a.id == app.id);
+  return html`<div class="AppList">
+    ${visibleApps.map((app) => {
+      let appInstalled =
+        installedApps.list && installedApps.list.find((a) => a.id == app.id);
 
-    return html`<${AppCard}
-      key=${app.id}
-      app=${app}
-      appInstalled=${appInstalled}
-    />`;
-  });
+      return html`<${AppCard}
+        key=${app.id}
+        app=${app}
+        appInstalled=${appInstalled}
+      />`;
+    })}
+  </div>`;
 }
