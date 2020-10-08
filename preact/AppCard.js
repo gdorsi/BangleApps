@@ -67,7 +67,7 @@ export function AppCard({ app, appInstalled }) {
   const categories = app.tags.split(",");
   const [mainCategory] = chips.tags.find(([tag]) =>
     categories.includes(tag)
-  ) || ['app'];
+  ) || [];
 
   return html`<article class="AppCard">
     <header class="AppCard__content">
@@ -93,7 +93,7 @@ export function AppCard({ app, appInstalled }) {
       <${HtmlBlock} as="div" html="${description}" />
     </main>
     <footer class="AppCard__content">
-      <button>#${mainCategory}</button>
+      <button>#${mainCategory || 'app'}</button>
       <div class="AppCard__actions">
         ${canUpdate &&
         html`<button class="Button" onClick=${() => installer.update(app)}>
