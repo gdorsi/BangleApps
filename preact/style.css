@@ -1,45 +1,59 @@
+button {
+  all: unset;
+}
+
+.Button {
+  cursor: pointer;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #5755d9;
+  color: #5755d9;
+}
+
 .AppList {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .AppCard {
-    width: 324px;
-    height: 324px;
-    margin: 8px;
-    padding: 16px 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    border: 1px solid black;
-    border-radius: 8px;
+  width: 324px;
+  height: 324px;
+  margin: 6px;
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #CECDF4;
+  border-radius: 6px;
 }
 
 .AppCard__content {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
+}
+
+.AppCard__avatar {
+  width: 48px;
+  height: 48px;
 }
 
 .AppCard__actions {
-    display: inline-block;
+  display: inline-block;
 }
 
 .AppCard__main {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    padding: 16px 0;
-}
-
-.AppCard__main > * {
-    text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 18px 0;
 }
 
 .AppCard__title {
-    font-weight: bold;
-    margin-bottom: 8px;
+  font-weight: bold;
+  margin-bottom: 8px;
 }
