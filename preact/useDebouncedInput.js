@@ -14,7 +14,7 @@ export function useDebouncedInput(onChange, initialValue) {
     setValue(value);
 
     clearTimeout(timeout.current);
-    timeout.current = setTimeout(() => onChange(value), 500);
+    timeout.current = setTimeout(() => onChange(value), 300);
   }
 
   return {

@@ -1,6 +1,5 @@
 import htm from "https://cdn.skypack.dev/htm";
 import { h, render } from "https://cdn.skypack.dev/preact";
-import { useState } from "https://cdn.skypack.dev/preact/hooks";
 import { Toast } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { ProgressBar } from "./ProgressBar.js";
@@ -12,33 +11,18 @@ import { Header } from "./Header.js";
 
 export const html = htm.bind(h);
 
-const tabs = [
-  ["library", "Library"],
-  ["myapps", "My Apps"],
-  ["about", "About"],
-];
-
 window.Const = {
   /* Are we only putting a single app on a device? If so
   apps should all be saved as .bootcde and we write info
   about the current app into app.info */
-  SINGLE_APP_ONLY : false,
+  SINGLE_APP_ONLY: false,
 };
 
 function Main() {
-  const [activeTab, setTab] = useState("library");
+  const activeTab = 'library'; //TODO Router
 
-  return html` <${Header} />
+  return html`<${Header} />
     <${HttpsBanner} />
-    <ul class="tab tab-block">
-      ${tabs.map(
-        ([id, label]) => html`
-          <li class="tab-item ${id === activeTab ? "active" : ""}">
-            <button onClick=${() => setTab(id)}>${label}</button>
-          </li>
-        `
-      )}
-    </ul>
     <div class="container" id="toastcontainer">
       <${Toast} />
       <${ProgressBar} />

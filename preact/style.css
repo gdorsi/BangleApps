@@ -1,30 +1,44 @@
-button, label {
+:root {
+  --primary-color: #5755D9;
+  --shadow-color: #CECDF4;
+}
+
+button, label, input {
   all: unset;
+}
+
+html {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+}
+
+body {
+  font-size: 1.2rem;
 }
 
 .AppList {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
+  gap: 1rem;
 }
 
 .AppCard {
   width: 324px;
   height: 324px;
-  margin: 6px;
-  padding: 18px 24px;
+  padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border: 1px solid #CECDF4;
-  border-radius: 16px;
+  border: 1px solid var(--shadow-color);
+  border-radius: 1rem;
   transition: all .15s ease-in-out;
 }
 
 .AppCard:hover {
-  transform: translateY(-6px);
-  box-shadow: 0px 6px 0px #CECDF4;
+  transform: translateY(-.5rem);
+  box-shadow: 0px .5rem 0px var(--shadow-color);
 }
 
 .AppCard__content {
@@ -48,30 +62,56 @@ button, label {
   flex-grow: 1;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding: 18px 0;
+  padding: 1.5rem 0;
+  color: #666;
 }
 
 .AppCard__title {
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: .5rem;
+  font-size: 1.25rem;
 }
 
 .Button {
+  display: inline-block;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #5755d9;
-  color: #5755d9;
+  padding: .5rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: white;
 }
 
 .Chip {
-  padding: 4px 8px;
+  display: inline-block;
+  cursor: pointer;
+  padding: .5rem 1rem;
   background: #EBEBFA;
-  border-radius: 26px;
-  color: #5755D9;
+  border-radius: 2rem;
+  color: var(--primary-color);
 }
 
 .Chip--active {
   color: #EBEBFA;
-  background: #5755D9;
+  background: var(--primary-color);
+}
+
+.Header {
+  background: var(--primary-color);
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-content: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.Header__logo {
+  color: var(--shadow-color);
+}
+
+.Header__search {
+  flex-grow: 1;
+  background: var(--shadow-color);
+  border-radius: .5rem;
+  padding: .5rem 1rem;
 }

@@ -66,9 +66,8 @@ export function AppCard({ app, appInstalled }) {
   }, [app.description]);
 
   const categories = app.tags.split(",");
-  const [mainCategory] = chips.tags.find(([tag]) =>
-    categories.includes(tag)
-  ) || [];
+  const [mainCategory] =
+    chips.tags.find(([tag]) => categories.includes(tag)) || [];
 
   return html`<article class="AppCard">
     <header class="AppCard__content">
@@ -82,30 +81,20 @@ export function AppCard({ app, appInstalled }) {
       </div>
     </header>
     <main class="AppCard__main">
-      <div class="AppCard__title">
-        ${app.name}${" "}
-        <small>
-          ${canUpdate
-            ? html`v${appInstalled.version || "Unknown version"}, latest
-              v${app.version}`
-            : html`v${app.version}`}
-        </small>
-      </div>
+      <div class="AppCard__title">${app.name}</div>
       <${HtmlBlock} as="div" html="${description}" />
     </main>
     <footer class="AppCard__content">
-      <${Chip}>#${mainCategory || 'app'}<//>
+      <${Chip}>#${mainCategory || "app"}<//>
       <div class="AppCard__actions">
         ${canUpdate &&
         html`<button class="Button" onClick=${() => installer.update(app)}>
-            Update
-          </button>
-          />`}
+          Update
+        </button>`}
         ${appInstalled
           ? html`<button class="Button" onClick=${() => installer.remove(app)}>
-                Remove
-              </button>
-              />`
+              Remove
+            </button>`
           : html`<button
               class="Button"
               onClick=${() =>
