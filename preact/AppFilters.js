@@ -49,10 +49,9 @@ export function AppFilters() {
     ([value, text]) => html`<${Chip}
               key=${value}
               value=${value}
-              text=${text}
               onClick=${filters.setActive}
               active=${filters.active === value}
-            />`
+            >${text}<//>`
   )}
       </div>
       <div class="sort-nav ${!filters.sortInfo ? "hidden" : ""}">

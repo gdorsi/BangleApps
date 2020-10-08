@@ -9,6 +9,7 @@ import { HtmlBlock } from "./HtmlBlock.js";
 import { useAppInstaller } from "./useAppInstaller.js";
 import { html } from "./index.js";
 import { chips } from "./AppFilters.js";
+import { Chip } from "./Chip.js";
 
 function getAppGithubURL(app) {
   let username = "espruino";
@@ -93,7 +94,7 @@ export function AppCard({ app, appInstalled }) {
       <${HtmlBlock} as="div" html="${description}" />
     </main>
     <footer class="AppCard__content">
-      <button>#${mainCategory || 'app'}</button>
+      <${Chip}>#${mainCategory || 'app'}<//>
       <div class="AppCard__actions">
         ${canUpdate &&
         html`<button class="Button" onClick=${() => installer.update(app)}>

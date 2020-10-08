@@ -1,14 +1,5 @@
-button {
+button, label {
   all: unset;
-}
-
-.Button {
-  cursor: pointer;
-  font-size: 12px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #5755d9;
-  color: #5755d9;
 }
 
 .AppList {
@@ -39,6 +30,7 @@ button {
 .AppCard__content {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .AppCard__avatar {
@@ -62,4 +54,24 @@ button {
 .AppCard__title {
   font-weight: bold;
   margin-bottom: 8px;
+}
+
+.Button {
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #5755d9;
+  color: #5755d9;
+}
+
+.Chip {
+  padding: 4px 8px;
+  background: #EBEBFA;
+  border-radius: 26px;
+  color: #5755D9;
+}
+
+.Chip--active {
+  color: #EBEBFA;
+  background: #5755D9;
 }
