@@ -3,7 +3,7 @@
   --shadow-color: #CECDF4;
 }
 
-button, label, input {
+button, label, input, a, a:hover, a:visited {
   all: unset;
 }
 
@@ -72,11 +72,28 @@ body {
   font-size: 1.25rem;
 }
 
+.AppFilters {
+  padding: 18px 24px;
+  display: flex;
+}
+
+.AppFilters__filters {
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+  flex-grow: 1;
+}
+
 .Button {
-  display: inline-block;
   cursor: pointer;
   padding: .5rem 1rem;
   border-radius: 1rem;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.Button--primary-inverted {
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
   background: white;
@@ -84,7 +101,6 @@ body {
 
 .Chip {
   display: inline-block;
-  cursor: pointer;
   padding: .5rem 1rem;
   background: #EBEBFA;
   border-radius: 2rem;
@@ -96,22 +112,48 @@ body {
   background: var(--primary-color);
 }
 
+.Chip--interactive {
+  cursor: pointer;
+  background: transparent;
+}
+
+.Chip--interactive:hover {
+  background: #EBEBFA;
+}
+
 .Header {
   background: var(--primary-color);
   padding: 1.5rem 2rem;
   display: flex;
-  align-content: center;
-  justify-content: space-between;
+  align-items: center;
   gap: 1rem;
+  color: white;
+}
+
+.Header__actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: end;
 }
 
 .Header__logo {
-  color: var(--shadow-color);
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  white-space: nowrap;
 }
 
 .Header__search {
-  flex-grow: 1;
-  background: var(--shadow-color);
+  display: inline-flex;
+  align-items: center;
+  background: #2C2AC0;
   border-radius: .5rem;
-  padding: .5rem 1rem;
+  padding: .75rem 1rem;
+  flex-grow: 1;
+}
+
+.Icon {
+  padding-right: .5em;
+  width: 1.5em;
+  height: 1.5em;
 }

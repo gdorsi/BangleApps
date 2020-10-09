@@ -88,15 +88,15 @@ export function AppCard({ app, appInstalled }) {
       <${Chip}>#${mainCategory || "app"}<//>
       <div class="AppCard__actions">
         ${canUpdate &&
-        html`<button class="Button" onClick=${() => installer.update(app)}>
+        html`<button class="Button Button--primary-inverted" onClick=${() => installer.update(app)}>
           Update
         </button>`}
         ${appInstalled
-          ? html`<button class="Button" onClick=${() => installer.remove(app)}>
+          ? html`<button class="Button Button--primary-inverted" onClick=${() => installer.remove(app)}>
               Remove
             </button>`
           : html`<button
-              class="Button"
+              class="Button Button--primary-inverted"
               onClick=${() =>
                 app.custom ? customAppPrompt.show() : installer.install(app)}
             >

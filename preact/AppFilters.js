@@ -4,13 +4,13 @@ import { Chip } from "./Chip.js";
 
 export const chips = {
   tags: [
-    ["", "Default"],
+    ["", "All"],
     ["clock", "Clocks"],
     ["game", "Games"],
     ["tool", "Tools"],
     ["widget", "Widgets"],
     ["bluetooth", "Bluetooth"],
-    ["outdoors", "Outdoors"],
+    ["outdoors", "Outdoor"],
   ],
   sort: [
     ["", "None"],
@@ -22,8 +22,8 @@ export const chips = {
 export function AppFilters() {
   const filters = useFilters();
 
-  return html`<div style="padding: 18px 24px;">
-    <div class="filter-nav" style="display: inline-flex; gap: 0.5rem;">
+  return html`<div class="AppFilters">
+    <div class="AppFilters__filters">
       ${chips.tags.map(
         ([value, text]) => html`<${Chip}
           key=${value}
@@ -34,7 +34,7 @@ export function AppFilters() {
         >`
       )}
     </div>
-    <div class="sort-nav ${!filters.sortInfo ? "hidden" : ""}">
+    <div class="AppFilters__sort ${!filters.sortInfo ? "hidden" : ""}">
       <span>Sort by:</span>
       ${chips.sort.map(
         ([value, text]) => html`<${Chip}
