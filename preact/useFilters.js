@@ -6,9 +6,18 @@ import {
 } from "./atoms.js";
 import { toastAtom } from "./Toast.js";
 
+const url = new URL(location.href);
+
 export const activeCategoryAtom = createStateAtom("");
 export const sortAtom = createStateAtom("");
-export const searchAtom = createStateAtom("");
+export const searchAtom = createStateAtom(
+  url.searchParams.get("search") || "",
+  (search) => {
+    const url = new URL(location.href);
+    url.searchParams.set("search", search);
+    history.replaceState({}, document.title, url);
+  }
+);
 export const sortInfoAtom = createDataAtom(
   () =>
     fetch("appdates.csv")

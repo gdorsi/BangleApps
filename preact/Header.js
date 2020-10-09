@@ -19,7 +19,7 @@ export function Header() {
    */
   const searchInput = useDebouncedInput((value) => {
     filters.setSearch(value.toLowerCase()); //TODO move the normalization inside the useFilters hook
-  });
+  }, filters.search);
 
   return html`<header class="Header">
     <a class="Header__logo" href="https://banglejs.com" target="_blank"

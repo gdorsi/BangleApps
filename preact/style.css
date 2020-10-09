@@ -152,6 +152,10 @@ body {
   flex-grow: 1;
 }
 
+.Header__search input {
+  flex-grow: 1;
+}
+
 .Icon {
   padding-right: .5em;
   width: 1.5em;
