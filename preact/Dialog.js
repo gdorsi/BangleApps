@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "https://cdn.skypack.dev/preact/hooks";
+import { Button } from "./Button.js";
 
 function getFocusableElements(el) {
   return el.querySelectorAll(
@@ -40,7 +41,7 @@ export function Dialog({ header, body, footer, onClose }) {
     const focusedElBeforeOpen = document.activeElement;
 
     const focusableElements = getFocusableElements(
-      ref.current.querySelector(".modal-container")
+      ref.current.querySelector(".Modal__content")
     );
 
     //The close button is focused only when it is the only focusable element
@@ -60,7 +61,7 @@ export function Dialog({ header, body, footer, onClose }) {
       if (code !== "Tab" && which !== 9) return;
 
       const focusableElements = getFocusableElements(
-        ref.current.querySelector(".modal-container")
+        ref.current.querySelector(".Modal__content")
       );
 
       if (focusableElements.length === 1) {
@@ -93,32 +94,32 @@ export function Dialog({ header, body, footer, onClose }) {
 
   return createPortal(
     html`
-      <div role="dialog" class="modal active" ref=${ref}>
+      <div role="dialog" class="Modal" ref=${ref}>
         <a
           href="#close"
-          class="modal-overlay"
+          class="Modal__overlay"
           aria-label="Close"
           onClick=${handleClose}
         ></a>
-        <div class="modal-container" style="height: 100%">
-          <div class="modal-header">
-            <a
-              href="#close"
-              class="btn btn-clear float-right"
-              aria-label="Close"
-              onClick=${handleClose}
-            ></a>
-            ${header}
+        <div class="Modal__content">
+          <div class="Modal__header">
+            <div class="Modal__title">${header}</div>
+            <${Button} primary rounded label="Close" onClick=${handleClose}>
+              <svg class="Icon" width="12" height="12" viewBox="0 0 12 12">
+                <path
+                  d="M1 1L11 11M1 11L11 1L1 11Z"
+                  stroke="#5755D9"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            <//>
           </div>
-          <div class="modal-body" style="height: 100%;overflow-y: inherit;">
+          <div class="Modal__body">
             ${body}
           </div>
-          ${footer &&
-          html`
-            <div class="modal-footer">
-              ${footer}
-            </div>
-          `}
+          ${footer && html` <div class="modal-footer">${footer}</div> `}
         </div>
       </div>
     `,

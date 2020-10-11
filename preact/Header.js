@@ -3,6 +3,7 @@ import { useIsConnected } from "./useIsConnected.js";
 import { html } from "./index.js";
 import { useFilters } from "./useFilters.js";
 import { useDebouncedInput } from "./useDebouncedInput.js";
+import { Button } from "./Button.js";
 
 export function Header() {
   const installedApps = useInstalledApps();
@@ -46,10 +47,9 @@ export function Header() {
       <input placeholder="Search by keyword" ...${searchInput} />
     </div>
     <div class="Header__actions">
-      <button
-        class="Button ${filters.section === "myapps"
-          ? "Button--primary-inverted"
-          : ""}"
+      <${Button}
+        primary=${filters.section === "myapps"}
+        inverted
         onClick=${() => filters.setSection("myapps")}
       >
         <svg class="Icon" width="17" height="14" viewBox="0 0 17 14">
@@ -58,8 +58,8 @@ export function Header() {
           />
         </svg>
         My App
-      </button>
-      <button class="Button">
+      <//>
+      <${Button}>
         <svg class="Icon" width="17" height="14" viewBox="0 0 17 14">
           <path
             fill-rule="evenodd"
@@ -68,8 +68,8 @@ export function Header() {
           />
         </svg>
         Favourites
-      </button>
-      <button class="Button">
+      <//>
+      <${Button}>
         <svg class="Icon" width="16" height="16" viewBox="0 0 16 16">
           <path
             fill-rule="evenodd"
@@ -78,15 +78,16 @@ export function Header() {
           />
         </svg>
         Settings
-      </button>
-      <button
-        class="Button Button--primary-inverted"
+      <//>
+      <${Button}
+        primary
+        inverted
         onClick=${isConnected
           ? installedApps.disconnect
           : installedApps.loadFromTheDevice}
       >
         ${isConnected ? "Disconnect" : "Connect"}
-      </button>
+      <//>
     </div>
   </header>`;
 }

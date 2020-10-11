@@ -10,6 +10,7 @@ import { useAppInstaller } from "./useAppInstaller.js";
 import { html } from "./index.js";
 import { chips } from "./AppFilters.js";
 import { Chip } from "./Chip.js";
+import { Button } from "./Button.js";
 
 function getAppGithubURL(app) {
   let username = "espruino";
@@ -77,7 +78,7 @@ export function AppCard({ app, appInstalled }) {
         alt="${app.name}"
       />
       <div class="AppCard__actions">
-        <button>${html`<${IconHeart} />`}</button>
+        <${Button}>${html`<${IconHeart} />`}<//>
       </div>
     </header>
     <main class="AppCard__main">
@@ -88,15 +89,18 @@ export function AppCard({ app, appInstalled }) {
       <${Chip}>#${mainCategory || "app"}<//>
       <div class="AppCard__actions">
         ${canUpdate &&
-        html`<button class="Button Button--primary-inverted" onClick=${() => installer.update(app)}>
+        html`<${Button} primary inverted onClick=${() => installer.update(app)}>
           Update
-        </button>`}
+        <//>`}
         ${appInstalled
-          ? html`<button class="Button Button--primary-inverted" onClick=${() => installer.remove(app)}>
+          ? html`<${Button}
+              primary
+              inverted
+              onClick=${() => installer.remove(app)}
+            >
               Remove
-            </button>`
-          : html`<button
-              class="Button Button--primary-inverted"
+            <//>`
+          : html`<${Button} primary inverted
               onClick=${() =>
                 app.custom ? customAppPrompt.show() : installer.install(app)}
             >

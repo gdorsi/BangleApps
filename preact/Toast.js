@@ -34,5 +34,5 @@ export function Toast() {
     console.log("showToast: unknown toast " + type);
   }
 
-  return html`<div class="toast toast-${type}">${msg}</div>`;
+  return html`<div class="Toast toast-${type}">${msg}</div>`;
 }

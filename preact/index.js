@@ -3,7 +3,6 @@ import { h, render } from "https://cdn.skypack.dev/preact";
 import { Toast } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { ProgressBar } from "./ProgressBar.js";
-import { InstallPrompt } from "./InstallPrompt.js";
 import { AppsLibrary } from "./AppsLibrary.js";
 import { InstalledApps } from "./InstalledApps.js";
 import { About } from "./About.js";
@@ -23,7 +22,7 @@ function Main() {
 
   return html`<${Header} />
     <${HttpsBanner} />
-    <div class="container" id="toastcontainer">
+    <div class="ToastContainer">
       <${Toast} />
       <${ProgressBar} />
     </div>
@@ -33,8 +32,7 @@ function Main() {
         : activeTab === "myapps"
         ? html`<${InstalledApps} />`
         : html`<${About} />`}
-    </div>
-    <${InstallPrompt} />`;
+    </div>`;
 }
 
 render(html`<${Main} />`, document.querySelector("#root"));

@@ -40,7 +40,7 @@ export function CustomAppDialog({ onClose, onConfirm, app }) {
       header=${app.name}
       body=${html`<iframe
         src="apps/${app.id}/${app.custom}"
-        style="width:100%;height:100%;border:0px;"
+        style="width:100%;min-height:50vh;border:0px;"
         ref=${ref}
       ></iframe>`}
     />

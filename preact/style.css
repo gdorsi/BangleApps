@@ -1,25 +1,35 @@
 :root {
-  --primary-color: #5755D9;
-  --shadow-color: #CECDF4;
+  --primary-color: #5755d9;
+  --shadow-color: #cecdf4;
 }
 
-button, label, input, a{
+button,
+label,
+input,
+a {
   all: unset;
 }
 
-a:hover, a:visited, a:focus {
+a:hover,
+a:visited,
+a:focus {
   text-decoration: inherit;
   color: inherit;
 }
 
 html {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 12px;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 
 body {
   font-size: 1.2rem;
+  margin: 0;
+}
+
+.hidden {
+  display: none;
 }
 
 .AppList {
@@ -39,12 +49,12 @@ body {
   justify-content: center;
   border: 1px solid var(--shadow-color);
   border-radius: 1rem;
-  transition: all .15s ease-in-out;
+  transition: all 0.15s ease-in-out;
 }
 
 .AppCard:hover {
-  transform: translateY(-.5rem);
-  box-shadow: 0px .5rem 0px var(--shadow-color);
+  transform: translateY(-0.5rem);
+  box-shadow: 0px 0.5rem 0px var(--shadow-color);
 }
 
 .AppCard__content {
@@ -74,7 +84,7 @@ body {
 
 .AppCard__title {
   font-weight: bold;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   font-size: 1.25rem;
 }
 
@@ -85,23 +95,30 @@ body {
 
 .AppFilters__filters {
   display: flex;
-  gap: .5rem;
+  gap: 0.5rem;
   justify-content: center;
   flex-grow: 1;
 }
 
 .Button {
   cursor: pointer;
-  padding: .5rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 1rem;
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
   border: 1px solid transparent;
+  gap: 0.5em;
 }
 
 .Button .Icon path {
-  fill: #FFF;
+  fill: #fff;
+}
+
+.Button--primary {
+  border: 1px solid var(--shadow-color);
+  color: var(--primary-color);
+  background: var(--shadow-color);
 }
 
 .Button--primary-inverted {
@@ -114,17 +131,25 @@ body {
   fill: var(--primary-color);
 }
 
+.Button--rounded {
+  border-radius: 100%;
+  width: 0.5em;
+  height: .5em;
+  padding: .5rem;
+  justify-content: center;
+  font-size: 1.5rem;
+}
 
 .Chip {
   display: inline-block;
-  padding: .5rem 1rem;
-  background: #EBEBFA;
+  padding: 0.5rem 1rem;
+  background: #ebebfa;
   border-radius: 2rem;
   color: var(--primary-color);
 }
 
 .Chip--active {
-  color: #EBEBFA;
+  color: #ebebfa;
   background: var(--primary-color);
 }
 
@@ -134,7 +159,7 @@ body {
 }
 
 .Chip--interactive:hover {
-  background: #EBEBFA;
+  background: #ebebfa;
 }
 
 .Header {
@@ -155,7 +180,7 @@ body {
 .Header__logo {
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
+  gap: 0.5rem;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -163,22 +188,122 @@ body {
 .Header__search {
   display: inline-flex;
   align-items: center;
-  background: #2C2AC0;
-  border-radius: .5rem;
-  padding: .75rem 1rem;
+  background: #2c2ac0;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
   flex-grow: 1;
+  gap: .5rem;
 }
 
 .Header__search input {
   flex-grow: 1;
+  color: white;
+}
+
+.Header__search input::placeholder {
+  color: var(--shadow-color);
 }
 
 .Icon {
-  padding-right: .5em;
   width: 1.5em;
   height: 1.5em;
 }
 
 .Icon path {
-  fill: var(--primary-color);
+  fill: transparent;
+}
+
+.Loader {
+  position: relative;
+  font-size: 1.5em;
+  border-radius: 1em;
+  width: 1em;
+  height: 1em;
+  border: 0.2em solid rgba(255, 255, 255, 0.2);
+  border-left-color: #ffffff;
+  animation: loader 1.1s infinite linear;
+}
+
+@keyframes loader {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.Modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+}
+
+.Modal__overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  cursor: default;
+  background: rgba(247, 248, 249, 0.75);
+  z-index: -1;
+}
+
+.Modal__content {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 0.2rem 0.5rem rgba(48,55,66,.3);
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  width: 100%;
+  min-height: 50vh;
+  padding: .5rem;
+}
+
+.Modal__header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.Modal__title {
+  font-size: 1.5rem;
+  padding: .5rem 0;
+}
+
+.Modal__body {
+  padding: 0.75rem 1rem;
+  flex-grow: 1;
+}
+
+.ToastContainer {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.Toast {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary-color);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

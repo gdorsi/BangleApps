@@ -58,17 +58,9 @@ export function ProgressBar() {
     percent = min + (max - min) * percent;
   }
 
-  return html`<div class="toast">
-    ${state.text ? html`<div>${state.text}</div>` : ``}
-    <div class="bar bar-sm">
-      <div
-        class="bar-item"
-        role="progressbar"
-        style="width:${percent * 100}%;"
-        aria-valuenow="${percent * 100}"
-        aria-valuemin="0"
-        aria-valuemax="100"
-      ></div>
-    </div>
+  return html`<div class="Toast">
+    <div class="Loader"></div>
+    <div>${state.text}</div>
+    <div>${(percent * 100).toFixed(0)}%</div>
   </div>`;
 }
