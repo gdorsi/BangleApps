@@ -3,13 +3,19 @@
   --shadow-color: #CECDF4;
 }
 
-button, label, input, a, a:hover, a:visited {
+button, label, input, a{
   all: unset;
+}
+
+a:hover, a:visited, a:focus {
+  text-decoration: inherit;
+  color: inherit;
 }
 
 html {
   font-family: 'Roboto', sans-serif;
   font-size: 12px;
+  overflow: scroll;
 }
 
 body {
@@ -91,6 +97,11 @@ body {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.Button .Icon path {
+  fill: #FFF;
 }
 
 .Button--primary-inverted {
@@ -98,6 +109,11 @@ body {
   color: var(--primary-color);
   background: white;
 }
+
+.Button--primary-inverted .Icon path {
+  fill: var(--primary-color);
+}
+
 
 .Chip {
   display: inline-block;
@@ -141,6 +157,7 @@ body {
   align-items: center;
   gap: .5rem;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .Header__search {
@@ -160,4 +177,8 @@ body {
   padding-right: .5em;
   width: 1.5em;
   height: 1.5em;
+}
+
+.Icon path {
+  fill: var(--primary-color);
 }

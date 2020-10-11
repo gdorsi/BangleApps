@@ -8,16 +8,34 @@ import { toastAtom } from "./Toast.js";
 
 const url = new URL(location.href);
 
-export const activeCategoryAtom = createStateAtom("");
-export const sortAtom = createStateAtom("");
-export const searchAtom = createStateAtom(
-  url.searchParams.get("search") || "",
-  (search) => {
+function getFromQS(key) {
+  return url.searchParams.get(key) || "";
+}
+
+const filtersInitialState = {
+  category: getFromQS("category"),
+  sort: getFromQS("sort"),
+  search: getFromQS("search"),
+  section: getFromQS("section"),
+};
+
+const filtersAtom = createStateAtom(
+  filtersInitialState,
+  (filters) => {
     const url = new URL(location.href);
-    url.searchParams.set("search", search);
+
+    Object.keys(filtersInitialState).forEach((key) => {
+      if (filters[key]) {
+        url.searchParams.set(key, filters[key]);
+      } else {
+        url.searchParams.delete(key);
+      }
+    });
+
     history.replaceState({}, document.title, url);
   }
 );
+
 export const sortInfoAtom = createDataAtom(
   () =>
     fetch("appdates.csv")
@@ -51,18 +69,25 @@ export const sortInfoAtom = createDataAtom(
 );
 
 export const useFilters = () => {
-  const [active, setActive] = useStateAtom(activeCategoryAtom);
-  const [sort, setSort] = useStateAtom(sortAtom);
+  const [filters, setFilters] = useStateAtom(filtersAtom);
   const { data: sortInfo } = useAtomValue(sortInfoAtom);
-  const [search, setSearch] = useStateAtom(searchAtom);
+
+  const setter = (key) => (value) => {
+    setFilters((state) => ({
+      ...state,
+      [key]: value,
+    }));
+  };
 
   return {
-    active,
-    setActive,
-    sort,
-    setSort,
+    active: filters.category,
+    setActive: setter("category"),
+    sort: filters.sort,
+    setSort: setter("sort"),
     sortInfo,
-    search,
-    setSearch,
+    search: filters.search,
+    setSearch: setter("search"),
+    section: filters.section,
+    setSection: setter("section"),
   };
 };
