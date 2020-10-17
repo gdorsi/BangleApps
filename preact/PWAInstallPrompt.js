@@ -10,7 +10,7 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 
-export function InstallPrompt() {
+export function PWAInstallPrompt() {
   const [promptEvent, setPromptEvent] = useState();
 
   useEffect(() => {

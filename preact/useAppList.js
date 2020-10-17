@@ -2,6 +2,29 @@ import { createDataAtom, useAtomValue } from "./atoms.js";
 import { toastAtom } from "./Toast.js";
 import { useFilters } from "./useFilters.js";
 import { useInstalledApps } from "./useInstalledApps.js";
+import { useMemo } from "https://cdn.skypack.dev/preact/hooks";
+import marked from "https://cdn.skypack.dev/marked";
+import { chips } from "./AppFilters.js";
+
+function getAppGithubURL(app) {
+  let username = "espruino";
+  let githubMatch = window.location.href.match(/\/(\w+)\.github\.io/);
+
+  if (githubMatch) username = githubMatch[1];
+
+  return `https://github.com/${username}/BangleApps/tree/master/apps/${app.id}`;
+}
+
+/* Given 2 JSON structures (1st from apps.json, 2nd from an installed app)
+  work out what to display re: versions and if we can update */
+function getCanUpdate(app, appInstalled) {
+  //TODO Implement semver compare
+  if (appInstalled && app.version != appInstalled.version) {
+    return true;
+  }
+
+  return false;
+}
 
 const appListAtom = createDataAtom(
   () =>
@@ -38,6 +61,25 @@ export const useAppList = () => {
   const filters = useFilters();
 
   if (!visibleApps) return [];
+
+  visibleApps = useMemo(() => {
+    return visibleApps.map((app) => {
+      const categories = app.tags.split(",");
+      const [mainCategory] =
+        chips.tags.find(([tag]) => categories.includes(tag)) || [];
+
+      return {
+        ...app,
+        categories,
+        mainCategory,
+        description: marked(app.description, {
+          baseUrl: `apps/${app.id}/`,
+        }),
+        avatar: `apps/${app.icon ? `${app.id}/${app.icon}` : "unknown.png"}`,
+        github: getAppGithubURL(app),
+      };
+    });
+  }, [visibleApps]);
 
   if (filters.active) {
     visibleApps = visibleApps.filter(
@@ -85,6 +127,7 @@ export const useAppList = () => {
         return {
           ...app,
           appInstalled,
+          canUpdate: getCanUpdate(app, appInstalled),
         };
       }
 
@@ -92,8 +135,8 @@ export const useAppList = () => {
     });
   }
 
-  if (filters.section === 'myapps') {
-    visibleApps = visibleApps.filter(app => app.appInstalled);
+  if (filters.section === "myapps") {
+    visibleApps = visibleApps.filter((app) => app.appInstalled);
   }
 
   return visibleApps;

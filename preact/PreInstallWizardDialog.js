@@ -2,7 +2,7 @@ import { html } from "./index.js";
 import { useEffect, useRef } from "https://cdn.skypack.dev/preact/hooks";
 import { Dialog } from "./Dialog.js";
 
-export function CustomAppDialog({ onClose, onConfirm, app }) {
+export function PreInstallWizardDialog({ onClose, onConfirm, app }) {
   const ref = useRef();
 
   useEffect(() => {
