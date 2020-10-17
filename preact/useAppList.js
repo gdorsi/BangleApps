@@ -71,7 +71,7 @@ export const useAppList = () => {
       return {
         ...app,
         categories,
-        mainCategory,
+        mainCategory: mainCategory || 'app',
         description: marked(app.description, {
           baseUrl: `apps/${app.id}/`,
         }),

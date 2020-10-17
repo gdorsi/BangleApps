@@ -61,6 +61,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
 }
 
 .AppCard__avatar {
@@ -80,6 +81,7 @@ body {
   overflow: hidden;
   padding: 1.5rem 0;
   color: #666;
+  cursor: pointer;
 }
 
 .AppCard__title {
