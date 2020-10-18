@@ -2,7 +2,8 @@ import { html } from "./index.js";
 
 export function Button({
   primary,
-  inverted,
+  active,
+  light,
   rounded,
   label,
   onClick,
@@ -10,8 +11,10 @@ export function Button({
 }) {
   const classes = [
     'Button',
-    primary ? (inverted ? "Button--primary-inverted" : "Button--primary") : "",
+    primary && "Button--primary",
     rounded && "Button--rounded",
+    active && "Button--active",
+    light && "Button--light",
   ].filter(Boolean).join(' ');
 
   return html`<button

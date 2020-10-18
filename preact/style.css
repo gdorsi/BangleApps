@@ -1,6 +1,7 @@
 :root {
   --primary-color: #5755d9;
   --shadow-color: #cecdf4;
+  --primary-light-color: #ebebfa;
 }
 
 button,
@@ -123,13 +124,13 @@ body {
   background: var(--shadow-color);
 }
 
-.Button--primary-inverted {
+.Button--active {
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
   background: white;
 }
 
-.Button--primary-inverted .Icon path {
+.Button--active .Icon path {
   fill: var(--primary-color);
 }
 
@@ -142,26 +143,30 @@ body {
   font-size: 1.5rem;
 }
 
+.Button--light {
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .Chip {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: #ebebfa;
+  background: var(--primary-light-color);
   border-radius: 2rem;
   color: var(--primary-color);
 }
 
 .Chip--active {
-  color: #ebebfa;
+  color: var(--primary-light-color);
   background: var(--primary-color);
 }
 
 .Chip--interactive {
   cursor: pointer;
-  background: transparent;
 }
 
 .Chip--interactive:hover {
-  background: #ebebfa;
+  background: var(--primary-light-color);
 }
 
 .Header {
@@ -222,7 +227,7 @@ body {
   width: 1em;
   height: 1em;
   border: 0.2em solid rgba(255, 255, 255, 0.2);
-  border-left-color: #ffffff;
+  border-left-color: white;
   animation: loader 1.1s infinite linear;
 }
 

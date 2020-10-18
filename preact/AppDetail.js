@@ -37,18 +37,17 @@ export function AppDetail({ onClose, app }) {
       <${Chip}>#${mainCategory}<//>
       <div class="AppCard__actions">
         ${canUpdate &&
-        html`<${Button} primary inverted onClick=${() => installer.update(app)}>
+        html`<${Button} active onClick=${() => installer.update(app)}>
           Update
         <//>`}
         ${appInstalled
           ? html`<${Button}
-              primary
-              inverted
+              active
               onClick=${() => installer.remove(app)}
             >
               Remove
             <//>`
-          : html`<${Button} primary inverted
+          : html`<${Button} active
               onClick=${() =>
                 app.custom ? customAppPrompt.show() : installer.install(app)}
             >
