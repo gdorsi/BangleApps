@@ -74,7 +74,8 @@ body {
 }
 
 .AppCard__actions {
-  display: inline-block;
+  display: inline-flex;
+  gap: 0.5rem;
 }
 
 .AppCard__main {
