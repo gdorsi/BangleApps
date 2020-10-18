@@ -1,5 +1,5 @@
-import { useEffect, useState } from "https://cdn.skypack.dev/preact/hooks";
-import { html } from "./index.js";
+import { useEffect, useState } from "./preact.js";
+import { html } from "./preact.js";
 
 addEventListener("appinstalled", (event) => {
   console.log("👍", "appinstalled", event);

@@ -1,5 +1,5 @@
-import { html } from "./index.js";
-import { useEffect } from "https://cdn.skypack.dev/preact/hooks";
+import { html } from "./preact.js";
+import { useEffect } from "./preact.js";
 import { createStateAtom, useStateAtom, useAtomSetState } from "./atoms.js";
 
 export const toastAtom = createStateAtom();

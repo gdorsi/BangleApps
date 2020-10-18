@@ -1,4 +1,4 @@
-import { html } from "./index.js";
+import { html } from "./preact.js";
 
 export function Button({
   primary,

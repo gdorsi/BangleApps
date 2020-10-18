@@ -1,5 +1,5 @@
 import { useFilters } from "./useFilters.js";
-import { html } from "./index.js";
+import { html } from "./preact.js";
 import { Chip } from "./Chip.js";
 
 export const chips = {

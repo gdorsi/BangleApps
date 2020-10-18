@@ -1,10 +1,10 @@
-import { h, createContext } from "https://cdn.skypack.dev/preact";
+import { h, createContext } from "./preact.js";
 import {
   useContext,
   useMemo,
   useReducer,
   useLayoutEffect,
-} from "https://cdn.skypack.dev/preact/hooks";
+} from "./preact.js";
 
 //find a better name
 function makeAtomsState() {

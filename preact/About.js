@@ -2,7 +2,7 @@ import { useStateAtom } from "./atoms.js";
 import { Confirm, usePrompt } from "./Dialog.js";
 import { useAppsUtils, pretokeniseAtom } from "./useAppsUtils.js";
 import { useAppInstaller } from "./useAppInstaller.js";
-import { html } from "./index.js";
+import { html } from "./preact.js";
 
 export function About() {
   const installer = useAppInstaller();

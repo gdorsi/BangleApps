@@ -1,5 +1,3 @@
-import htm from "https://cdn.skypack.dev/htm";
-import { h, render } from "https://cdn.skypack.dev/preact";
 import { Toast } from "./Toast.js";
 import { HttpsBanner } from "./HttpsBanner.js";
 import { ProgressBar } from "./ProgressBar.js";
@@ -7,8 +5,7 @@ import { AppsLibrary } from "./AppsLibrary.js";
 import { InstalledApps } from "./InstalledApps.js";
 import { About } from "./About.js";
 import { Header } from "./Header.js";
-
-export const html = htm.bind(h);
+import { html, render } from "./preact.js";
 
 window.Const = {
   /* Are we only putting a single app on a device? If so

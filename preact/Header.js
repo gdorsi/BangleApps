@@ -1,6 +1,6 @@
 import { useInstalledApps } from "./useInstalledApps.js";
 import { useIsConnected } from "./useIsConnected.js";
-import { html } from "./index.js";
+import { html } from "./preact.js";
 import { useFilters } from "./useFilters.js";
 import { useDebouncedInput } from "./useDebouncedInput.js";
 import { Button } from "./Button.js";

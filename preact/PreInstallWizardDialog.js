@@ -1,5 +1,5 @@
-import { html } from "./index.js";
-import { useEffect, useRef } from "https://cdn.skypack.dev/preact/hooks";
+import { html } from "./preact.js";
+import { useEffect, useRef } from "./preact.js";
 import { Dialog } from "./Dialog.js";
 
 export function PreInstallWizardDialog({ onClose, onConfirm, app }) {

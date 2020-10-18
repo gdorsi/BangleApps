@@ -1,4 +1,4 @@
-import { h } from "https://cdn.skypack.dev/preact";
+import { h } from "./preact.js";
 
 export function HtmlBlock({ as = "span", html, ...props }) {
   return h(as, {

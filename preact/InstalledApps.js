@@ -1,7 +1,7 @@
 import { useInstalledApps } from "./useInstalledApps.js";
 import { useAppList } from "./useAppList.js";
 import { AppCard } from "./AppCard.js";
-import { html } from "./index.js";
+import { html } from "./preact.js";
 
 export function InstalledApps() {
   const { data: appList } = useAppList();

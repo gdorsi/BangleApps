@@ -1,5 +1,5 @@
-import { html } from "./index.js";
-import { useEffect, useRef, useState } from "https://cdn.skypack.dev/preact/hooks";
+import { html } from "./preact.js";
+import { useEffect, useRef, useState } from "./preact.js";
 import { Dialog } from "./Dialog.js";
 import { useComms } from "./useComms.js";
 

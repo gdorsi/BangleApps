@@ -1,4 +1,4 @@
-import { html } from "./index.js";
+import { html } from "./preact.js";
 
 export function Chip({ value, active, children, onClick }) {
   return html`<button

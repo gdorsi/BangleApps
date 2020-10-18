@@ -1,7 +1,7 @@
 import {
   useRef,
   useState
-} from "https://cdn.skypack.dev/preact/hooks";
+} from "./preact.js";
 
 export function useDebouncedInput(onChange, initialValue) {
   const [value, setValue] = useState(initialValue || "");

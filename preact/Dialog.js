@@ -1,10 +1,10 @@
-import { html } from "./index.js";
-import { createPortal } from "https://cdn.skypack.dev/preact/compat";
+import { html } from "./preact.js";
+import { createPortal } from "./preact.js";
 import {
   useEffect,
   useRef,
   useState,
-} from "https://cdn.skypack.dev/preact/hooks";
+} from "./preact.js";
 import { Button } from "./Button.js";
 
 function getFocusableElements(el) {

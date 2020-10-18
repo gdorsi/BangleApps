@@ -1,9 +1,8 @@
 import { createDataAtom, useAtomValue } from "./atoms.js";
+import { marked } from "./marked.js";
 import { toastAtom } from "./Toast.js";
 import { useFilters } from "./useFilters.js";
 import { useInstalledApps } from "./useInstalledApps.js";
-import { useMemo } from "https://cdn.skypack.dev/preact/hooks";
-import marked from "https://cdn.skypack.dev/marked";
 import { chips } from "./AppFilters.js";
 
 function getAppGithubURL(app) {

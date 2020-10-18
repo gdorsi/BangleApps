@@ -1,5 +1,5 @@
 import { useAppList } from "./useAppList.js";
-import { html } from "./index.js";
+import { html } from "./preact.js";
 import { AppCard } from "./AppCard.js";
 
 export function AppList() {

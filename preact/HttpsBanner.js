@@ -1,4 +1,4 @@
-import { html } from "./index.js";
+import { html } from "./preact.js";
 
 /**
  * Warn the page must be served over HTTPS

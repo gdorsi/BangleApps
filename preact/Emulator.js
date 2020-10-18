@@ -1,4 +1,4 @@
-import { html } from "./index.js";
+import { html } from "./preact.js";
 import { Dialog } from "./Dialog.js";
 
 function getEmulatorURL(app) {

@@ -1,4 +1,4 @@
-import { html } from "./index.js";
+import { html } from "./preact.js";
 
 export const IconHeart = ({ filled }) => html`<svg
     class="Icon"

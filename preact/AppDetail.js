@@ -5,7 +5,7 @@ import { AppReadmeDialog } from "./AppReadme.js";
 import { AppInterfaceDialog } from "./AppInterface.js";
 import { HtmlBlock } from "./HtmlBlock.js";
 import { useAppInstaller } from "./useAppInstaller.js";
-import { html } from "./index.js";
+import { html } from "./preact.js";
 import { Chip } from "./Chip.js";
 import { Button } from "./Button.js";
 import { IconHeart } from "./Icons.js";

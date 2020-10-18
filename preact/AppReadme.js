@@ -1,6 +1,6 @@
-import { html } from "./index.js";
-import marked from "https://cdn.skypack.dev/marked";
-import { useEffect, useState } from "https://cdn.skypack.dev/preact/hooks";
+import { html } from "./preact.js";
+import { marked } from "./marked.js";
+import { useEffect, useState } from "./preact.js";
 import { Dialog } from "./Dialog.js";
 import { HtmlBlock } from "./HtmlBlock.js";
 
