@@ -10,6 +10,7 @@ import { Chip } from "./Chip.js";
 import { Button } from "./Button.js";
 import { IconHeart } from "./Icons.js";
 import { AppDetail } from "./AppDetail.js";
+import { AppVersion } from "./AppVersion.js";
 
 export function AppCard({ app }) {
   const installer = useAppInstaller();
@@ -30,7 +31,7 @@ export function AppCard({ app }) {
       </div>
     </header>
     <main class="AppCard__main" onClick=${detailDialog.show}>
-      <div class="AppCard__title">${app.name}</div>
+      <div class="AppCard__title">${app.name} <${AppVersion} app=${app} /></div>
       <${HtmlBlock} as="div" html="${description}" />
     </main>
     <footer class="AppCard__content">

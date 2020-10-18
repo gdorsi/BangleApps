@@ -109,8 +109,8 @@ body {
 }
 
 .AppDetail__avatar {
-  width: 120px;
-  height: 120px;
+  width: 132px;
+  height: 132px;
   border: 2px var(--primary-light-color) solid;
   border-radius: 1rem;
 }
@@ -119,6 +119,9 @@ body {
   font-family: var(--title-font);
   font-weight: 600;
   font-size: 2rem;
+  display: flex;
+  align-items: flex-end;
+  line-height: 1;
 }
 
 .AppDetail__info {
@@ -150,6 +153,12 @@ body {
   gap: 0.5rem;
   justify-content: center;
   flex-grow: 1;
+}
+
+.AppVersion {
+  font-family: var(--font);
+  font-size: 1rem;
+  color: var(--primary-color);
 }
 
 .Button {

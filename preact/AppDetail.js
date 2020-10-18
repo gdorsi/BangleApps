@@ -10,6 +10,7 @@ import { Chip } from "./Chip.js";
 import { Button } from "./Button.js";
 import { IconHeart, IconOpenExternalLink } from "./Icons.js";
 import { Dialog } from "./Dialog.js";
+import { AppVersion } from "./AppVersion.js";
 
 export function AppDetail({ onClose, app }) {
   const installer = useAppInstaller();
@@ -25,7 +26,7 @@ export function AppDetail({ onClose, app }) {
     <header class="AppDetail__header">
       <img class="AppDetail__avatar" src=${avatar} alt=${app.name} />
       <div class="AppDetail__info">
-        <div class="AppDetail__title">${app.name}</div>
+        <div class="AppDetail__title">${app.name} <${AppVersion} app=${app} /></div>
         <div>
           ${categories.map(
             (category) => html`<${Chip} key=${category}>#${category}<//>`
