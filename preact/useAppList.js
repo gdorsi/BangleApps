@@ -26,11 +26,30 @@ function getCanUpdate(app, appInstalled) {
   return false;
 }
 
+function formatApps(apps) {
+  return apps.map((app) => {
+    const categories = app.tags.split(",");
+    const [mainCategory] =
+      chips.tags.find(([tag]) => categories.includes(tag)) || [categories[0]];
+
+    return {
+      ...app,
+      categories,
+      mainCategory: mainCategory || "app",
+      description: marked(app.description, {
+        baseUrl: `apps/${app.id}/`,
+      }),
+      avatar: `apps/${app.icon ? `${app.id}/${app.icon}` : "unknown.png"}`,
+      github: getAppGithubURL(app),
+    };
+  });
+}
+
 const appListAtom = createDataAtom(
   () =>
-    fetch("apps.json").then((res) =>
-      res.ok ? res.json() : Promise.reject(res)
-    ),
+    fetch("apps.json")
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then(formatApps),
   ({ error, init, fetchData }, use) => {
     const toast = use(toastAtom);
 
@@ -62,28 +81,9 @@ export const useAppList = () => {
 
   if (!visibleApps) return [];
 
-  visibleApps = useMemo(() => {
-    return visibleApps.map((app) => {
-      const categories = app.tags.split(",");
-      const [mainCategory] =
-        chips.tags.find(([tag]) => categories.includes(tag)) || [];
-
-      return {
-        ...app,
-        categories,
-        mainCategory: mainCategory || 'app',
-        description: marked(app.description, {
-          baseUrl: `apps/${app.id}/`,
-        }),
-        avatar: `apps/${app.icon ? `${app.id}/${app.icon}` : "unknown.png"}`,
-        github: getAppGithubURL(app),
-      };
-    });
-  }, [visibleApps]);
-
   if (filters.active) {
-    visibleApps = visibleApps.filter(
-      (app) => app.tags && app.tags.split(",").includes(filters.active)
+    visibleApps = visibleApps.filter((app) =>
+      app.categories.includes(filters.active)
     );
   }
 
@@ -91,7 +91,7 @@ export const useAppList = () => {
     visibleApps = visibleApps.filter(
       (app) =>
         app.name.toLowerCase().includes(filters.search) ||
-        app.tags.includes(filters.search)
+        app.categories.some((category) => category.includes(filters.search))
     );
   }
 
