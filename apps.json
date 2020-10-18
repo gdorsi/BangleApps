@@ -1,11 +1,11 @@
 [
   { "id": "boot",
     "name": "Bootloader",
+    "tags": "tool,system",
+    "type":"bootloader",
     "icon": "bootloader.png",
     "version":"0.21",
     "description": "This is needed by Bangle.js to automatically load the clock, menu, widgets and settings",
-    "tags": "tool,system",
-    "type":"bootloader",
     "storage": [
       {"name":".boot0","url":"boot0.js"},
       {"name":".bootcde","url":"bootloader.js"}
@@ -116,6 +116,24 @@
     ],
     "data": [
       {"name":"welcome.json"}
+    ]
+  },
+  { "id": "mywelcome",
+    "name": "Customised Welcome",
+    "shortName": "My Welcome",
+    "icon": "app.png",
+    "version":"0.10",
+    "description": "Appears at first boot and explains how to use Bangle.js. Like 'Welcome', but can be customised with a greeting",
+    "tags": "start,welcome",
+    "custom":"custom.html",
+    "storage": [
+      {"name":"mywelcome.boot.js","url":"boot.js"},
+      {"name":"mywelcome.app.js","url":"app.js"},
+      {"name":"mywelcome.settings.js","url":"settings.js"},
+      {"name":"mywelcome.img","url":"app-icon.js","evaluate":true}
+    ],
+    "data": [
+      {"name":"mywelcome.json"}
     ]
   },
   { "id": "gbridge",
@@ -1718,7 +1736,7 @@
     "id": "simpletimer",
     "name": "Timer",
     "icon": "app.png",
-    "version": "0.05",
+    "version": "0.07",
     "description": "Simple timer, useful when playing board games or cooking",
     "tags": "timer",
     "readme": "README.md",
@@ -1940,8 +1958,8 @@
     "name": "Vertical watch face",
     "shortName":"Vertical Face",
     "icon": "app.png",
-    "version":"0.06",
-    "description": "A simple vertical watch face with the date.",
+    "version":"0.07",
+    "description": "A simple vertical watch face with the date. Heart rate monitor is toggled with BTN1",
     "tags": "clock",
     "type":"clock",
     "allow_emulator":true,
@@ -2209,6 +2227,19 @@
       {"name":"cscsensor.img","url":"cscsensor-icon.js","evaluate":true}
     ]
   },
+  { "id": "fileman",
+    "name": "File manager",
+    "shortName":"FileManager",
+    "icon": "icons8-filing-cabinet-48.png",
+    "version":"0.01",
+    "description": "Simple file manager, allows user to examine watch storage and display, load or delete individual files",
+    "tags": "tools",
+    "readme": "README.md",
+    "storage": [
+      {"name":"fileman.app.js","url":"fileman.app.js"},
+      {"name":"fileman.img","url":"fileman-icon.js","evaluate":true}
+    ]
+  },
  { "id": "worldclock",
     "name": "World Clock - 4 time zones",
     "shortName":"World Clock",
@@ -2224,5 +2255,32 @@
       {"name":"worldclock.settings.json"},
       {"name":"worldclock.img","url":"worldclock-icon.js","evaluate":true}
   ]
- }
+ },
+
+{ "id": "digiclock",
+  "name": "Digital Clock Face",
+  "shortName":"Digi Clock",
+  "icon": "digiclock.png",
+  "version":"0.01",
+  "description": "A simple digital clock with the time, day, month, and year",
+  "tags": "clock",
+  "type" : "clock",
+  "storage": [
+    {"name":"digiclock.app.js","url":"digiclock.js"},
+    {"name":"digiclock.img","url":"digiclock-icon.js","evaluate":true}
+ ]
+},
+  { "id": "dsdrelay",
+    "name": "DSD BLE Relay controller",
+    "shortName":"DSDRelay",
+    "icon": "icons8-relay-48.png",
+    "version":"0.01",
+    "description": "Control BLE relay board from the watch",
+    "tags": "ble,bluetooth",
+    "readme": "README.md",
+    "storage": [
+      {"name":"dsdrelay.app.js","url":"dsdrelay.app.js"},
+      {"name":"dsdrelay.img","url":"dsdrelay-icon.js","evaluate":true}
+    ]
+  }
 ]
