@@ -6,6 +6,7 @@ import {
   useState,
 } from "./preact.js";
 import { Button } from "./Button.js";
+import { IconClose } from "./Icons.js";
 
 function getFocusableElements(el) {
   return el.querySelectorAll(
@@ -104,16 +105,8 @@ export function Dialog({ header, body, footer, onClose }) {
         <div class="Modal__content">
           <div class="Modal__header">
             <div class="Modal__title">${header}</div>
-            <${Button} primary rounded label="Close" onClick=${handleClose}>
-              <svg class="Icon" width="12" height="12" viewBox="0 0 12 12">
-                <path
-                  d="M1 1L11 11M1 11L11 1L1 11Z"
-                  stroke="#5755D9"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+            <${Button} secondary rounded label="Close" onClick=${handleClose}>
+              <${IconClose} />
             <//>
           </div>
           <div class="Modal__body">

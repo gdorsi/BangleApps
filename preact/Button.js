@@ -2,26 +2,27 @@ import { html } from "./preact.js";
 
 export function Button({
   primary,
+  secondary,
   active,
   light,
   rounded,
   label,
-  onClick,
+  as = "button",
   children,
+  ...props
 }) {
   const classes = [
-    'Button',
+    "Button",
     primary && "Button--primary",
+    secondary && "Button--secondary",
     rounded && "Button--rounded",
     active && "Button--active",
     light && "Button--light",
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-  return html`<button
-    class=${classes}
-    aria-label="${label}"
-    onClick=${onClick}
-  >
+  return html`<${as} class=${classes} aria-label="${label}" ...${props}>
     ${children}
-  </button>`;
+  <//>`;
 }

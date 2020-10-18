@@ -8,7 +8,7 @@ import { useAppInstaller } from "./useAppInstaller.js";
 import { html } from "./preact.js";
 import { Chip } from "./Chip.js";
 import { Button } from "./Button.js";
-import { IconHeart } from "./Icons.js";
+import { IconHeart, IconOpenExternalLink } from "./Icons.js";
 import { Dialog } from "./Dialog.js";
 
 export function AppDetail({ onClose, app }) {
@@ -18,43 +18,55 @@ export function AppDetail({ onClose, app }) {
   const appInterfacePrompt = usePrompt();
   const emulatorPrompt = usePrompt();
   const readmePrompt = usePrompt();
-  const detailDialog = usePrompt();
 
-  const { description, mainCategory, avatar, canUpdate, appInstalled } = app;
+  const { description, categories, avatar, canUpdate, appInstalled } = app;
 
-  const body = html`<article class="AppCard">
-    <header class="AppCard__content" onClick=${detailDialog.show}>
-      <img class="AppCard__avatar" src=${avatar} alt=${app.name} />
-      <div class="AppCard__actions">
-        <button><${IconHeart} /></button>
+  const body = html`<article class="AppDetail">
+    <header class="AppDetail__header">
+      <img class="AppDetail__avatar" src=${avatar} alt=${app.name} />
+      <div class="AppDetail__info">
+        <div class="AppDetail__title">${app.name}</div>
+        <div>
+          ${categories.map(
+            (category) => html`<${Chip} key=${category}>#${category}<//>`
+          )}
+        </div>
+        <div>
+          ${canUpdate &&
+          html`<${Button} primary onClick=${() => installer.update(app)}>
+            Update
+          <//>`}
+          ${appInstalled
+            ? html`<${Button} primary onClick=${() => installer.remove(app)}>
+                Remove
+              <//>`
+            : html`<${Button}
+                primary
+                onClick=${() =>
+                  app.custom
+                    ? installWizardPrompt.show()
+                    : installer.install(app)}
+              >
+                Install
+              <//>`}
+          <${Button}
+            href=${app.github}
+            target="_blank"
+            rel="noopener"
+            as="a"
+            active
+            >GitHub <${IconOpenExternalLink}
+          /><//>
+        </div>
+      </div>
+      <div>
+        <${Button} active rounded><${IconHeart} /><//>
       </div>
     </header>
-    <main class="AppCard__main" onClick=${detailDialog.show}>
-      <div class="AppCard__title">${app.name}</div>
+    <main class="AppDetail__description">
       <${HtmlBlock} as="div" html="${description}" />
     </main>
-    <footer class="AppCard__content">
-      <${Chip}>#${mainCategory}<//>
-      <div class="AppCard__actions">
-        ${canUpdate &&
-        html`<${Button} active onClick=${() => installer.update(app)}>
-          Update
-        <//>`}
-        ${appInstalled
-          ? html`<${Button}
-              active
-              onClick=${() => installer.remove(app)}
-            >
-              Remove
-            <//>`
-          : html`<${Button} active
-              onClick=${() =>
-                app.custom ? customAppPrompt.show() : installer.install(app)}
-            >
-              Install
-            </button>`}
-      </div>
-    </footer>
+    <footer class="AppCard__content"></footer>
     ${installWizardPrompt.isOpen &&
     html`<${PreInstallWizardDialog}
       app=${app}
@@ -70,11 +82,7 @@ export function AppDetail({ onClose, app }) {
     html`<${EmulatorDialog} app=${app} onClose=${emulatorPrompt.onClose} />`}
     ${readmePrompt.isOpen &&
     html`<${AppReadmeDialog} app=${app} onClose=${readmePrompt.onClose} />`}
-    ${detailDialog.isOpen &&
-    html`<${AppDetail} app=${app} onClose=${detailDialog.onClose} />`}
   </article> `;
 
-  return html`
-    <${Dialog} onClose=${onClose} header=${app.name} body=${body} />
-  `;
+  return html` <${Dialog} onClose=${onClose} body=${body} /> `;
 }

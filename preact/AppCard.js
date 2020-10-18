@@ -37,19 +37,27 @@ export function AppCard({ app }) {
       <${Chip}>#${mainCategory}<//>
       <div class="AppCard__actions">
         ${canUpdate &&
-        html`<${Button} active onClick=${() => installer.update(app)}>
+        html`<${Button} primary active onClick=${() => installer.update(app)}>
           Update
         <//>`}
         ${appInstalled
-          ? html`<${Button} active onClick=${() => installer.remove(app)}>
+          ? html`<${Button}
+              primary
+              active
+              onClick=${() => installer.remove(app)}
+            >
               Remove
             <//>`
-          : html`<${Button} active
+          : html`<${Button}
+              primary
+              active
               onClick=${() =>
-                app.custom ? customAppPrompt.show() : installer.install(app)}
+                app.custom
+                  ? installWizardPrompt.show()
+                  : installer.install(app)}
             >
               Install
-            </button>`}
+            <//>`}
       </div>
     </footer>
     ${installWizardPrompt.isOpen &&
