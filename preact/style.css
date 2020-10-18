@@ -2,6 +2,8 @@
   --primary-color: #5755d9;
   --shadow-color: #cecdf4;
   --primary-light-color: #ebebfa;
+  --font:  "Lato", sans-serif;
+  --title-font: "Nunito", sans-serif;
 }
 
 button,
@@ -19,7 +21,7 @@ a:focus {
 }
 
 html {
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font);
   font-size: 12px;
   overflow-y: scroll;
 }
@@ -27,6 +29,7 @@ html {
 body {
   font-size: 1.2rem;
   margin: 0;
+  line-height: 1.5;
 }
 
 .hidden {
@@ -42,8 +45,8 @@ body {
 }
 
 .AppCard {
-  width: 324px;
-  height: 324px;
+  width: 309px;
+  height: 264px;
   padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
@@ -81,14 +84,16 @@ body {
   text-overflow: ellipsis;
   overflow: hidden;
   padding: 1.5rem 0;
-  color: #666;
+  color: #41414E;
   cursor: pointer;
 }
 
 .AppCard__title {
-  font-weight: bold;
+  font-family: var(--title-font);
+  font-weight: 600;
   margin-bottom: 0.5rem;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  color: black;
 }
 
 .AppDetail {
@@ -111,6 +116,8 @@ body {
 }
 
 .AppDetail__title {
+  font-family: var(--title-font);
+  font-weight: 600;
   font-size: 2rem;
 }
 
@@ -119,6 +126,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   flex-grow: 1;
+  gap: 1.5rem;
 }
 
 .AppDetail__info > * {
