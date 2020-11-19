@@ -4,7 +4,7 @@
     "tags": "tool,system",
     "type":"bootloader",
     "icon": "bootloader.png",
-    "version":"0.21",
+    "version":"0.22",
     "description": "This is needed by Bangle.js to automatically load the clock, menu, widgets and settings",
     "storage": [
       {"name":".boot0","url":"boot0.js"},
@@ -122,7 +122,7 @@
     "name": "Customised Welcome",
     "shortName": "My Welcome",
     "icon": "app.png",
-    "version":"0.10",
+    "version":"0.11",
     "description": "Appears at first boot and explains how to use Bangle.js. Like 'Welcome', but can be customised with a greeting",
     "tags": "start,welcome",
     "custom":"custom.html",
@@ -445,6 +445,33 @@
     ],
     "data": [
       {"name": "weather.json"}
+    ]
+  },
+  { "id": "chargeanim",
+    "name": "Charge Animation",
+    "icon": "icon.png",
+    "version":"0.01",
+    "description": "When charging, show a sideways charging animation and keep the screen on. When removed from the charger load the clock again.",
+    "tags": "battery",
+    "allow_emulator":true,
+    "storage": [
+      {"name":"chargeanim.app.js","url":"app.js"},
+      {"name":"chargeanim.boot.js","url":"boot.js"},
+      {"name":"chargeanim.img","url":"app-icon.js","evaluate":true}
+    ]
+  },
+  { "id": "bluetoothdock",
+    "name": "Bluetooth Dock",
+    "shortName":"Dock",
+    "icon": "app.png",
+    "version":"0.01",
+    "description": "When charging shows the time, scans Bluetooth for known devices (eg temperature) and shows them on the screen",
+    "tags": "bluetooth",
+    "readme": "README.md",
+    "storage": [
+      {"name":"bluetoothdock.app.js","url":"app.js"},
+      {"name":"bluetoothdock.boot.js","url":"boot.js"},
+      {"name":"bluetoothdock.img","url":"app-icon.js","evaluate":true}
     ]
   },
   { "id": "widbat",
@@ -904,7 +931,7 @@
     "id": "gpsinfo",
     "name": "GPS Info",
     "icon": "gps-info.png",
-    "version":"0.03",
+    "version":"0.04",
     "description": "An application that displays information about altitude, lat/lon, satellites and time",
     "tags": "gps",
     "type": "app",
@@ -1260,7 +1287,7 @@
     "id": "rpgdice",
     "name": "RPG dice",
     "icon": "rpgdice.png",
-    "version": "0.01",
+    "version": "0.02",
     "description": "Simple RPG dice rolling app.",
     "tags": "game,fun",
     "type": "app",
@@ -1423,7 +1450,7 @@
     "name": "BLE Detector",
     "shortName":"BLE Detector",
     "icon": "bledetect.png",
-    "version":"0.02",
+    "version":"0.03",
     "description": "Detect BLE devices and show some informations.",
     "tags": "app,bluetooth,tool",
     "readme": "README.md",
@@ -1677,7 +1704,7 @@
     "id": "largeclock",
     "name": "Large Clock",
     "icon": "largeclock.png",
-    "version": "0.06",
+    "version": "0.07",
     "description": "A readable and informational digital watch, with date, seconds and moon phase",
     "readme": "README.md",
     "tags": "clock",
@@ -1724,7 +1751,7 @@
     "name": "Xiaomi Plant Sensor",
     "shortName":"Mi Plant",
     "icon": "app.png",
-    "version":"0.01",
+    "version":"0.02",
     "description": "Reads and displays data from Xiaomi bluetooth plant moisture sensors",
     "tags": "xiaomi,mi,plant,ble,bluetooth",
     "storage": [
@@ -2109,7 +2136,7 @@
     "name": "Acceleration Recorder",
     "shortName":"Accel Rec",
     "icon": "app.png",
-    "version":"0.01",
+    "version":"0.02",
     "interface": "interface.html",
     "description": "This app puts the Bangle's accelerometer into 100Hz mode and reads 2 seconds worth of data after movement starts. The data can then be exported back to the PC.",
     "tags": "",
@@ -2175,7 +2202,7 @@
   {"id": "counter",
   "name": "Counter",
   "icon": "counter_icon.png",
-  "version": "0.01",
+  "version": "0.02",
   "description": "Simple counter",
   "tags": "tool",
   "allow_emulator": true,
@@ -2256,7 +2283,6 @@
       {"name":"worldclock.img","url":"worldclock-icon.js","evaluate":true}
   ]
  },
-
 { "id": "digiclock",
   "name": "Digital Clock Face",
   "shortName":"Digi Clock",
@@ -2282,5 +2308,104 @@
       {"name":"dsdrelay.app.js","url":"dsdrelay.app.js"},
       {"name":"dsdrelay.img","url":"dsdrelay-icon.js","evaluate":true}
     ]
-  }
+  },
+  { "id": "mandel",
+    "name": "Mandelbrot",
+    "shortName":"Mandel",
+    "icon": "mandel.png",
+    "version":"0.01",
+    "description": "Draw a zoomable Mandelbrot set",
+    "tags": "game",
+    "readme": "README.md",
+    "storage": [
+      {"name":"mandel.app.js","url":"mandel.min.js"},
+      {"name":"mandel.img","url":"mandel-icon.js","evaluate":true}
+    ]
+  },
+  {
+    "id": "petrock",
+    "name": "Pet rock",
+    "icon": "petrock.png",
+    "version": "0.02",
+    "description": "A virtual pet rock with wobbly eyes",
+    "tags": "game",
+    "type": "app",
+    "storage": [
+      {"name": "petrock.app.js", "url": "app.js"},
+      {"name": "petrock.img", "url": "app-icon.js", "evaluate": true}
+    ]
+  },
+  { "id": "smartibot",
+    "name": "Smartibot controller",
+    "shortName":"Smartibot",
+    "icon": "app.png",
+    "version":"0.01",
+    "description": "Control a [Smartibot Robot](https://thecraftyrobot.net/) straight from your Bangle.js",
+    "tags": "",
+    "storage": [
+      {"name":"smartibot.app.js","url":"app.js"},
+      {"name":"smartibot.img","url":"app-icon.js","evaluate":true}
+    ]
+  },
+  { "id": "widncr",
+    "name": "NCR Logo Widget",
+    "icon": "widget.png",
+    "version":"0.01",
+    "description": "Show the NodeConf Remote logo in the top left",
+    "tags": "widget",
+    "type":"widget",
+    "storage": [
+      {"name":"widncr.wid.js","url":"widget.js"}
+    ]
+  },
+  { "id": "ncrclk",
+    "name": "NCR Clock",
+    "shortName":"NCR Clock",
+    "icon": "app.png",
+    "version":"0.01",
+    "description": "NodeConf Remote clock",
+    "tags": "clock",
+    "type": "clock",
+    "storage": [
+      {"name":"ncrclk.app.js","url":"app.js"},
+      {"name":"ncrclk.img","url":"app-icon.js","evaluate":true}
+    ]
+  },
+{ "id": "isoclock",
+  "name": "ISO Compliant Clock Face",
+  "shortName":"ISO Clock",
+  "icon": "isoclock.png",
+  "version":"0.01",
+  "description": "Tweaked fork of digiclock for ISO date and time",
+  "tags": "clock",
+  "type" : "clock",
+  "storage": [
+    {"name":"isoclock.app.js","url":"isoclock.js"},
+    {"name":"isoclock.img","url":"isoclock-icon.js","evaluate":true}
+ ]
+},
+{ "id": "gpstimeserver",
+  "name": "GPS Time Server",
+  "icon": "widget.png",
+  "version":"0.01",
+  "description": "A widget which automatically starts the GPS and turns Bangle.js into a Bluetooth time server.",
+  "tags": "widget",
+  "type": "widget",
+  "readme": "README.md",
+  "storage": [
+    {"name":"gpstimeserver.wid.js","url":"widget.js"}
+  ]
+},
+{ "id": "tilthydro",
+  "name": "Tilt Hydrometer Display",
+  "shortName":"Tilt Hydro",
+  "icon": "app.png",
+  "version":"0.01",
+  "description": "A display for the [Tilt Hydrometer](https://tilthydrometer.com/) - [more info here](http://www.espruino.com/Tilt+Hydrometer+Display)",
+  "tags": "tools,bluetooth",
+  "storage": [
+    {"name":"tilthydro.app.js","url":"app.js"},
+    {"name":"tilthydro.img","url":"app-icon.js","evaluate":true}
+  ]
+}
 ]
