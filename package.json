@@ -9,7 +9,7 @@
   "scripts": {
     "lint-apps": "eslint ./apps --ext .js",
     "test": "node bin/sanitycheck.js && eslint ./apps --ext .js",
-    "start": "npx servor . preact.html  --reload"
+    "start": "npx http-server"
   },
   "dependencies": {
     "acorn": "^7.2.0"
